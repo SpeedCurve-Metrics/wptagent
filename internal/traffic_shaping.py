@@ -95,15 +95,20 @@ class TrafficShaper(object):
         if 'shaperLimit' in job:
             shaperLimit = self._to_int(job['shaperLimit'])
         if self.shaper is not None:
-            # If a lighthouse test is running, force the Lighthouse 3G profile:
-            # https://github.com/GoogleChrome/lighthouse/blob/master/docs/throttling.md
-            # 1.6Mbps down, 750Kbps up, 150ms RTT
+            # If a lighthouse test is running, force the default Lighthouse profiles.
+            # Mobile: 1.6Mbps down, 750Kbps up, 150ms RTT (https://github.com/GoogleChrome/lighthouse/blob/a6738e0033e7e5ca308b97c1c36f298b7d399402/docs/throttling.md#the-mobile-network-throttling-preset)
+            # Desktop: 10Mbps down/up, 40ms RTT (https://github.com/GoogleChrome/lighthouse/blob/a6738e0033e7e5ca308b97c1c36f298b7d399402/lighthouse-core/config/constants.js#L43-L50)
             if task['running_lighthouse'] and not job['lighthouse_throttle']:
-                rtt = 150
-                in_bps = 1600000
-                out_bps = 750000
                 plr = .0
                 shaperLimit = 0
+                if 'mobile' in job and job['mobile']:
+                    rtt = 150
+                    in_bps = int(1.6 * 1024 * 1000)
+                    out_bps = 750 * 1000
+                else:
+                    rtt = 40
+                    in_bps = 10 * 1024 * 1000
+                    out_bps = 10 * 1024 * 1000
             logging.debug('Configuring traffic shaping: %d/%d - %d ms, %0.2f%% plr, %d tc-qdisc limit',
                           in_bps, out_bps, rtt, plr, shaperLimit)
             ret = self.shaper.configure(in_bps, out_bps, rtt, plr, shaperLimit)

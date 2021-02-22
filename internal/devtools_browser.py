@@ -598,6 +598,7 @@ class DevtoolsBrowser(object):
                        '--output', 'json',
                        '--output-path', '"{0}"'.format(output_path)]
             if self.job['lighthouse_config']:
+                # When a config path is provided, delegate all emulation and throttling to the config
                 try:
                     lighthouse_config_file = os.path.join(task['dir'], 'lighthouse-config.json')
                     with open(lighthouse_config_file, 'wt') as f_out:
@@ -605,23 +606,27 @@ class DevtoolsBrowser(object):
                     command.extend(['--config-path', lighthouse_config_file])
                 except Exception:
                     logging.exception('Error adding custom config for lighthouse test')
-            else:
-                command.extend(['--throttling-method', 'provided'])
+            else if not job['lighthouse_throttle']:
+                # Otherwise network throttling is done by the traffic shaper, and CPU throttling is
+                # left to Lighthouse
+                command.extend(['--throttling-method', 'devtools'
+                                '--throttling.requestLatencyMs', '0',
+                                '--throttling.downloadThroughputKbps', '0',
+                                '--throttling.uploadThroughputKbps', '0'])
+                if self.options.android:
+                    command.extend(['--form-factor', 'mobile', '--screenEmulation.disabled'])
+                else if 'mobile' not in self.job or not self.job['mobile']:
+                    command.extend(['--preset', 'desktop'])
             if self.job['keep_lighthouse_trace']:
                 command.append('--save-assets')
             if not self.job['keep_lighthouse_screenshots']:
                 command.extend(['--skip-audits', 'screenshot-thumbnails'])
-            if self.options.android:
-                command.extend(['--emulated-form-factor', 'none'])
-                if 'user_agent_string' in self.job:
-                    sanitized_user_agent = re.sub(r'[^a-zA-Z0-9_\-.;:/()\[\] ]+', '', self.job['user_agent_string'])
-                    command.append('--chrome-flags="--user-agent=\'{0}\'"'.format(sanitized_user_agent))
-            elif 'mobile' not in self.job or not self.job['mobile']:
-                command.extend(['--emulated-form-factor', 'desktop'])
+            if 'user_agent_string' in self.job:
+                sanitized_user_agent = re.sub(r'[^a-zA-Z0-9_\-.;:/()\[\] ]+', '', self.job['user_agent_string'])
+                command.extend(['--emulatedUserAgent', "'{0}'".format(sanitized_user_agent)])
             if len(task['block']):
                 for pattern in task['block']:
-                    pattern = "'" + pattern.replace("'", "'\\''") + "'"
-                    command.extend(['--blocked-url-patterns', pattern])
+                    command.extend(['--blocked-url-patterns', "'{0}'".format(pattern.replace("'", "'\\''"))])
             if 'headers' in task:
                 try:
                     headers_file = os.path.join(task['dir'], 'lighthouse-headers.json')
