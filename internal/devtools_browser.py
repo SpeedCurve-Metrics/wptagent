@@ -606,7 +606,7 @@ class DevtoolsBrowser(object):
                     command.extend(['--config-path', lighthouse_config_file])
                 except Exception:
                     logging.exception('Error adding custom config for lighthouse test')
-            else if not job['lighthouse_throttle']:
+            elif not job['lighthouse_throttle']:
                 # Otherwise network throttling is done by the traffic shaper, and CPU throttling is
                 # left to Lighthouse
                 command.extend(['--throttling-method', 'devtools'
@@ -615,7 +615,7 @@ class DevtoolsBrowser(object):
                                 '--throttling.uploadThroughputKbps', '0'])
                 if self.options.android:
                     command.extend(['--form-factor', 'mobile', '--screenEmulation.disabled'])
-                else if 'mobile' not in self.job or not self.job['mobile']:
+                elif 'mobile' not in self.job or not self.job['mobile']:
                     command.extend(['--preset', 'desktop'])
             if self.job['keep_lighthouse_trace']:
                 command.append('--save-assets')
