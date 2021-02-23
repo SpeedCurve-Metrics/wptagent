@@ -606,7 +606,7 @@ class DevtoolsBrowser(object):
                     command.extend(['--config-path', lighthouse_config_file])
                 except Exception:
                     logging.exception('Error adding custom config for lighthouse test')
-            elif not job['lighthouse_throttle']:
+            elif not self.job['lighthouse_throttle']:
                 # Otherwise network throttling is done by the traffic shaper, and CPU throttling is
                 # left to Lighthouse
                 command.extend(['--throttling-method', 'devtools'
