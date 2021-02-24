@@ -609,7 +609,7 @@ class DevtoolsBrowser(object):
             elif not self.job['lighthouse_throttle']:
                 # Otherwise network throttling is done by the traffic shaper, and CPU throttling is
                 # left to Lighthouse
-                command.extend(['--throttling-method', 'devtools'
+                command.extend(['--throttling-method', 'devtools',
                                 '--throttling.requestLatencyMs', '0',
                                 '--throttling.downloadThroughputKbps', '0',
                                 '--throttling.uploadThroughputKbps', '0'])
