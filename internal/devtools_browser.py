@@ -580,8 +580,6 @@ class DevtoolsBrowser(object):
         """Run a lighthouse test against the current browser session"""
         task['lighthouse_log'] = ''
         if 'url' in self.job and self.job['url'] is not None:
-            if not self.job['lighthouse_config']:
-                self.job['shaper'].configure(self.job, task)
             output_path = os.path.join(task['dir'], 'lighthouse.json')
             json_file = os.path.join(task['dir'], 'lighthouse.report.json')
             json_gzip = os.path.join(task['dir'], 'lighthouse.json.gz')
@@ -606,17 +604,11 @@ class DevtoolsBrowser(object):
                     command.extend(['--config-path', lighthouse_config_file])
                 except Exception:
                     logging.exception('Error adding custom config for lighthouse test')
-            elif not self.job['lighthouse_throttle']:
-                # Otherwise network throttling is done by the traffic shaper, and CPU throttling is
-                # left to Lighthouse
-                command.extend(['--throttling-method', 'devtools',
-                                '--throttling.requestLatencyMs', '0',
-                                '--throttling.downloadThroughputKbps', '0',
-                                '--throttling.uploadThroughputKbps', '0'])
-                if self.options.android:
-                    command.extend(['--form-factor', 'mobile', '--screenEmulation.disabled'])
-                elif 'mobile' not in self.job or not self.job['mobile']:
+            else:
+                if not self.options.android and ('mobile' not in self.job or not self.job['mobile']):
                     command.extend(['--preset', 'desktop'])
+            if self.options.android:
+                command.extend(['--form-factor', 'mobile', '--screenEmulation.disabled'])
             if self.job['keep_lighthouse_trace']:
                 command.append('--save-assets')
             if not self.job['keep_lighthouse_screenshots']:
@@ -646,7 +638,6 @@ class DevtoolsBrowser(object):
                 logging.exception('Error running lighthouse audits')
             from .os_util import kill_all
             kill_all('node', True)
-            self.job['shaper'].reset()
             # Rename and compress the trace file, delete the other assets
             if self.job['keep_lighthouse_trace']:
                 try:
