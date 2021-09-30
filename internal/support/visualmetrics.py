@@ -625,28 +625,8 @@ def eliminate_duplicate_frames(directory):
             if options.viewport and options.notification:
                 if client_viewport['width'] == width and client_viewport['height'] == height:
                     client_viewport = None
-
-            # Figure out the region of the image that we care about
-            top = 8
-            right_margin = 8
-            bottom_margin = 20
-            if height > 400 or width > 400:
-                top = int(math.ceil(float(height) * 0.04))
-                right_margin = int(math.ceil(float(width) * 0.04))
-                bottom_margin = int(math.ceil(float(width) * 0.04))
-            height = max(height - top - bottom_margin, 1)
-            left = 0
-            width = max(width - right_margin, 1)
-
-            if client_viewport is not None:
-                height = max(
-                    client_viewport['height'] -
-                    top -
-                    bottom_margin,
-                    1)
-                width = max(client_viewport['width'] - right_margin, 1)
-                left += client_viewport['x']
-                top += client_viewport['y']
+               
+            left, top, width, height = calculate_crop_region(width, height)
 
             crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, height, left, top)
             logging.debug('Viewport cropping set to ' + crop)
@@ -1130,6 +1110,33 @@ def calculate_histograms(directory, histograms_file, force):
         logging.debug(
             'Histograms file {0} already exists'.format(histograms_file))
     logging.debug("Done calculating histograms")
+########################################################################################################################
+# Figure out the region of the image that we care about
+# Aims to calculate the crop needed to exclude browser Chrome - status bar, scrollbars etc.
+########################################################################################################################
+
+def calculate_crop_region(width, height):
+  
+  top = 8
+  right_margin = 8
+  bottom_margin = 20  # Height of Chrome status bar
+  left = 0
+  
+  if height > 400 or width > 400:
+    top = int(math.ceil(float(height) * 0.04))
+    right_margin = int(math.ceil(float(width) * 0.04))
+    bottom_margin = int(math.ceil(float(width) * 0.04))
+  height = max(height - top - bottom_margin, 1)
+  width = max(width - right_margin, 1)
+
+  if client_viewport is not None:
+    height = max(
+    client_viewport['height'] - top - bottom_margin, 1)
+    width = max(client_viewport['width'] - right_margin, 1)
+    left += client_viewport['x']
+    top += client_viewport['y']
+
+  return (left, top, width, height)
 
 def calculate_image_histogram(file):
     logging.debug('Calculating histogram for ' + file)
@@ -1138,6 +1145,10 @@ def calculate_image_histogram(file):
     try:
         im = Image.open(file)
         width, height = im.size
+
+        left, top, width, height = calculate_crop_region(width, height)
+    
+        im = im.crop((left, top, left + width, top + height))
         colors = im.getcolors(width * height)
         histogram = {'r': [0 for i in range(256)],
                      'g': [0 for i in range(256)],
