@@ -15,6 +15,7 @@ from .devtools_browser import DevtoolsBrowser
 
 CHROME_COMMAND_LINE_OPTIONS = [
     '--allow-running-insecure-content',
+    '--disable-back-forward-cache',
     '--disable-background-networking',
     '--disable-background-timer-throttling',
     '--disable-breakpad',
@@ -23,17 +24,21 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-default-apps',
     '--disable-device-discovery-notifications',
     '--disable-domain-reliability',
+    '--disable-fetching-hints-at-navigation-start',
     '--disable-hang-monitor',
     '--disable-notifications',
     '--disable-prompt-on-repost',
     '--disable-renderer-backgrounding',
+    '--disable-site-isolation-trials',
     '--disable-sync',
+    '--dont-require-litepage-redirect-infobar',
     '--load-media-router-component-extension=0',
     '--mute-audio',
     '--net-log-capture-mode=IncludeSensitive',
     '--new-window',
     '--no-default-browser-check',
     '--no-first-run',
+    '--override-https-image-compression-infobar',
     '--password-store=basic'
 ]
 
