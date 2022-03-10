@@ -308,8 +308,6 @@ class DevTools(object):
                 trace_config["includedCategories"].append("netlog")
             if "disabled-by-default-netlog" not in trace_config["includedCategories"]:
                 trace_config["includedCategories"].append("disabled-by-default-netlog")
-            if "disabled-by-default-blink.feature_usage" not in trace_config["includedCategories"]:
-                trace_config["includedCategories"].append("disabled-by-default-blink.feature_usage")
             self.trace_enabled = True
             self.send_command('Tracing.start',
                               {'traceConfig': trace_config},
