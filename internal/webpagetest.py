@@ -489,6 +489,9 @@ class WebPageTest(object):
                             throttle *= self.cpu_scale_multiplier
                         job['throttle_cpu_requested'] = job['throttle_cpu']
                         job['throttle_cpu'] = throttle
+                        logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f', 
+                            self.cpu_scale_multiplier, job['throttle_cpu_requested'], job['throttle_cpu'])
+
                 if job is None and len(locations) > 0:
                     location = str(locations.pop(0))
                     retry = True
