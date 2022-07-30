@@ -489,6 +489,7 @@ class WebPageTest(object):
                             throttle *= self.cpu_scale_multiplier
                         job['throttle_cpu_requested'] = job['throttle_cpu']
                         job['throttle_cpu'] = throttle
+                        job['cpu_scale_multiplier'] = self.cpu_scale_multiplier # Ugly hack to make it available later (AD)
                         logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f', 
                             self.cpu_scale_multiplier, job['throttle_cpu_requested'], job['throttle_cpu'])
 
