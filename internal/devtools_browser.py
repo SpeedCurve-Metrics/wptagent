@@ -133,6 +133,8 @@ class DevtoolsBrowser(object):
             if not self.options.android and 'throttle_cpu' in self.job and\
                     (not task['running_lighthouse'] or not self.job['lighthouse_config']):
                 logging.debug('DevTools CPU Throttle target: %0.3fx', self.job['throttle_cpu'])
+                logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f', 
+                    self.job['cpu_scale_multiplier'], self.job['throttle_cpu_requested'], self.job['throttle_cpu'])
                 if self.job['throttle_cpu'] > 1:
                     self.devtools.send_command("Emulation.setCPUThrottlingRate",
                                                 {"rate": self.job['throttle_cpu']},
