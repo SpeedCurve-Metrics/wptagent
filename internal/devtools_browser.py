@@ -180,8 +180,8 @@ class DevtoolsBrowser(object):
             task['page_data']['browser_version'] = self.browser_version
         if 'throttle_cpu' in self.job:
             task['page_data']['throttle_cpu_requested'] = self.job['throttle_cpu_requested']
-            if self.job['throttle_cpu'] > 1:
-                task['page_data']['throttle_cpu'] = self.job['throttle_cpu']
+#            if self.job['throttle_cpu'] > 1:
+            task['page_data']['throttle_cpu'] = self.job['throttle_cpu']    # Save the calculated throttle (devtools clamps value to at least 1)
         if self.devtools is not None:
             self.devtools.start_recording()
 
