@@ -26,6 +26,7 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-domain-reliability',
     '--disable-fetching-hints-at-navigation-start',
     '--disable-hang-monitor',
+    '--disable-infobars',
     '--disable-notifications',
     '--disable-prompt-on-repost',
     '--disable-renderer-backgrounding',
