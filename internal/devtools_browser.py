@@ -8,6 +8,7 @@ import gzip
 import io
 import logging
 import os
+import psutil
 import re
 import shutil
 import subprocess
@@ -182,6 +183,13 @@ class DevtoolsBrowser(object):
             task['page_data']['throttle_cpu_requested'] = self.job['throttle_cpu_requested']
 #            if self.job['throttle_cpu'] > 1:
             task['page_data']['throttle_cpu'] = self.job['throttle_cpu']    # Save the calculated throttle (devtools clamps value to at least 1)
+
+        # Debug data on host uptime and CPU
+        # TODO (AD) Review applicability for mobile agents
+        task['page_data']['debug'] = {}
+        task['page_data']['debug']['uptime'] = time.time() - psutil.boot_time()
+        task['page_data']['debug']['cpuFreq'] = psutil.cpu_freq(percpu=True)
+
         if self.devtools is not None:
             self.devtools.start_recording()
 
