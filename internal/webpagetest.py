@@ -379,6 +379,7 @@ class WebPageTest(object):
         from .os_util import get_free_disk_space
         if self.cpu_scale_multiplier is None:
             self.benchmark_cpu()
+            self.benchmark_cpu()
         if self.url is None:
             return None
         job = None
