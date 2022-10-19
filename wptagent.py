@@ -270,7 +270,7 @@ class WPTAgent(object):
                 os.utime(self.options.alive, None)
 
     def requires(self, module, module_name=None):
-        """Try importing a module and installing it if it isn't available"""
+        """Try importing a module"""
         ret = False
         if module_name is None:
             module_name = module
@@ -279,18 +279,6 @@ class WPTAgent(object):
             ret = True
         except ImportError:
             pass
-        if not ret and sys.version_info < (3, 0):
-            from internal.os_util import run_elevated
-            logging.debug('Trying to install %s...', module_name)
-            subprocess.call([sys.executable, '-m', 'pip', 'uninstall', '-y', module_name])
-            run_elevated(sys.executable, '-m pip uninstall -y {0}'.format(module_name))
-            subprocess.call([sys.executable, '-m', 'pip', 'install', module_name])
-            run_elevated(sys.executable, '-m pip install {0}'.format(module_name))
-            try:
-                __import__(module)
-                ret = True
-            except ImportError:
-                pass
         if not ret:
             if (sys.version_info >= (3, 0)):
                 print("Missing {0} module. Please run 'pip3 install {1}'".format(module, module_name))
@@ -779,35 +767,8 @@ def find_browsers(options):
     logging.debug('Detected Browsers:')
     for browser in browsers:
         logging.debug('%s: %s', browser, browsers[browser]['exe'])
-    if not options.webdriver and 'Firefox' in browsers:
-        try:
-            # make sure marionette is up to date
-            from internal.os_util import run_elevated
-            run_elevated(sys.executable, '-m pip install --upgrade marionette_driver')
-            run_elevated(sys.executable, '-m pip install \'mozrunner==7.4.0\' --force-reinstall')
-        except Exception:
-            pass
 
     return browsers
-
-
-def upgrade_pip_modules():
-    """Upgrade all of the outdated pip modules"""
-    try:
-        from internal.os_util import run_elevated
-        subprocess.call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
-        run_elevated(sys.executable, '-m pip install --upgrade pip')
-        if (sys.version_info >= (3, 0)):
-            out = subprocess.check_output([sys.executable, '-m', 'pip', 'list', '--outdated', '--format', 'freeze'], encoding='UTF-8')
-        else:
-            out = subprocess.check_output([sys.executable, '-m', 'pip', 'list', '--outdated', '--format', 'freeze'])
-        for line in out.splitlines():
-            separator = line.find('==')
-            if separator > 0:
-                package = line[:separator]
-                run_elevated(sys.executable, '-m pip install --upgrade {0}'.format(package))
-    except Exception:
-        pass
 
 
 def get_browser_versions(browsers):
@@ -974,17 +935,6 @@ def main():
                                                        backupCount=5, delay=True)
         err_log.setLevel(logging.ERROR)
         logging.getLogger().addHandler(err_log)
-
-    if options.ec2 or options.gce:
-        upgrade_pip_modules()
-    elif platform.system() == "Windows":
-        # recovery for a busted Windows install
-        try:
-            import win32api
-        except ImportError:
-            subprocess.call([sys.executable, '-m', 'pip', 'uninstall', '-y',
-                             'pywin32', 'pypiwin32'])
-            subprocess.call([sys.executable, '-m', 'pip', 'install', 'pywin32', 'pypiwin32'])
 
     browsers = None
     if not options.android and not options.iOS:
