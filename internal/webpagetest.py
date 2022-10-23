@@ -379,6 +379,7 @@ class WebPageTest(object):
         from .os_util import get_free_disk_space
         if self.cpu_scale_multiplier is None:
             self.benchmark_cpu()
+            self.benchmark_cpu()
         if self.url is None:
             return None
         job = None
@@ -489,6 +490,10 @@ class WebPageTest(object):
                             throttle *= self.cpu_scale_multiplier
                         job['throttle_cpu_requested'] = job['throttle_cpu']
                         job['throttle_cpu'] = throttle
+                        job['cpu_scale_multiplier'] = self.cpu_scale_multiplier # Ugly hack to make it available later (AD)
+                        logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f', 
+                            self.cpu_scale_multiplier, job['throttle_cpu_requested'], job['throttle_cpu'])
+
                 if job is None and len(locations) > 0:
                     location = str(locations.pop(0))
                     retry = True

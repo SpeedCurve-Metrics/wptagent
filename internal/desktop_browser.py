@@ -380,6 +380,7 @@ class DesktopBrowser(BaseBrowser):
     def on_start_recording(self, task):
         """Notification that we are about to start an operation that needs to be recorded"""
         import psutil
+
         if self.device_pixel_ratio is None:
             self.device_pixel_ratio = 1.0
             try:

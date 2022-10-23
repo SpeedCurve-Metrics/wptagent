@@ -1119,7 +1119,7 @@ def calculate_crop_region(width, height):
   
   top = 8
   right_margin = 8
-  bottom_margin = 20  # Height of Chrome status bar
+  bottom_margin = 22  # Height of Chrome status bar
   left = 0
   
   if height > 400 or width > 400:

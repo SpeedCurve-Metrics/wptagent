@@ -8,6 +8,7 @@ import gzip
 import io
 import logging
 import os
+import psutil
 import re
 import shutil
 import subprocess
@@ -133,6 +134,8 @@ class DevtoolsBrowser(object):
             if not self.options.android and 'throttle_cpu' in self.job and\
                     (not task['running_lighthouse'] or not self.job['lighthouse_config']):
                 logging.debug('DevTools CPU Throttle target: %0.3fx', self.job['throttle_cpu'])
+                logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f', 
+                    self.job['cpu_scale_multiplier'], self.job['throttle_cpu_requested'], self.job['throttle_cpu'])
                 if self.job['throttle_cpu'] > 1:
                     self.devtools.send_command("Emulation.setCPUThrottlingRate",
                                                 {"rate": self.job['throttle_cpu']},
@@ -178,8 +181,15 @@ class DevtoolsBrowser(object):
             task['page_data']['browser_version'] = self.browser_version
         if 'throttle_cpu' in self.job:
             task['page_data']['throttle_cpu_requested'] = self.job['throttle_cpu_requested']
-            if self.job['throttle_cpu'] > 1:
-                task['page_data']['throttle_cpu'] = self.job['throttle_cpu']
+#            if self.job['throttle_cpu'] > 1:
+            task['page_data']['throttle_cpu'] = self.job['throttle_cpu']    # Save the calculated throttle (devtools clamps value to at least 1)
+
+        # Debug data on host uptime and CPU
+        # TODO (AD) Review applicability for mobile agents
+        task['page_data']['debug'] = {}
+        task['page_data']['debug']['uptime'] = time.time() - psutil.boot_time()
+        task['page_data']['debug']['cpuFreq'] = psutil.cpu_freq(percpu=True)
+
         if self.devtools is not None:
             self.devtools.start_recording()
 

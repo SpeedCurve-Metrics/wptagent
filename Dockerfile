@@ -69,6 +69,8 @@ RUN apt-get update && \
     xvfbwrapper \
     brotli \
     'fonttools>=3.44.0,<4.0.0' \
+    'mozrunner==7.4.0' \
+    'mozfile==2.1.0' \
     marionette_driver \
     selenium \
     future
