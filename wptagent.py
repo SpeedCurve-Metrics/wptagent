@@ -529,15 +529,6 @@ def find_browsers(options):
         if 'Chrome Dev' in browsers and 'Canary' not in browsers:
             browsers['Chrome Canary'] = dict(browsers['Chrome Dev'])
             browsers['Canary'] = dict(browsers['Chrome Dev'])
-        # Opera (same engine as Chrome)
-        paths = [program_files, program_files_x86]
-        channels = ['Opera', 'Opera beta', 'Opera developer']
-        for channel in channels:
-            for path in paths:
-                if path is not None and channel not in browsers:
-                    opera_path = os.path.join(path, channel, 'launcher.exe')
-                    if os.path.isfile(opera_path):
-                        browsers[channel] = {'exe': opera_path, 'other_exes': ['opera.exe']}
         # Firefox browsers
         paths = [program_files, program_files_x86]
         for path in paths:
@@ -643,25 +634,6 @@ def find_browsers(options):
                 ie_path = os.path.join(path, 'Internet Explorer', 'iexplore.exe')
                 if os.path.isfile(ie_path):
                     browsers['ie'] = {'exe': ie_path, 'type': 'IE'}
-        # Brave
-        paths = [program_files, program_files_x86]
-        for path in paths:
-            if path is not None and 'Brave' not in browsers:
-                brave_path = os.path.join(path, 'BraveSoftware', 'Brave-Browser', 'Application', 'brave.exe')
-                if os.path.isfile(brave_path):
-                    browsers['Brave'] = {'exe': brave_path}
-            if path is not None and 'Brave Beta' not in browsers:
-                brave_path = os.path.join(path, 'BraveSoftware', 'Brave-Browser-Beta', 'Application', 'brave.exe')
-                if os.path.isfile(brave_path):
-                    browsers['Brave Beta'] = {'exe': brave_path}
-            if path is not None and 'Brave Dev' not in browsers:
-                brave_path = os.path.join(path, 'BraveSoftware', 'Brave-Browser-Dev', 'Application', 'brave.exe')
-                if os.path.isfile(brave_path):
-                    browsers['Brave Dev'] = {'exe': brave_path}
-            if path is not None and 'Brave Nightly' not in browsers:
-                brave_path = os.path.join(path, 'BraveSoftware', 'Brave-Browser-Nightly', 'Application', 'brave.exe')
-                if os.path.isfile(brave_path):
-                    browsers['Brave Nightly'] = {'exe': brave_path}
     elif plat == "Linux":
         chrome_path = '/opt/google/chrome/chrome'
         if 'Chrome' not in browsers and os.path.isfile(chrome_path):
@@ -689,25 +661,6 @@ def find_browsers(options):
             browsers['Chromium'] = {'exe': chromium_path}
         if 'Chrome' not in browsers and os.path.isfile(chromium_path):
             browsers['Chrome'] = {'exe': chromium_path}
-        # Opera
-        opera_path = '/usr/lib/x86_64-linux-gnu/opera/opera'
-        if 'Opera' not in browsers and os.path.isfile(opera_path):
-            browsers['Opera'] = {'exe': opera_path}
-        opera_path = '/usr/lib64/opera/opera'
-        if 'Opera' not in browsers and os.path.isfile(opera_path):
-            browsers['Opera'] = {'exe': opera_path}
-        beta_path = '/usr/lib/x86_64-linux-gnu/opera-beta/opera-beta'
-        if 'Opera beta' not in browsers and os.path.isfile(beta_path):
-            browsers['Opera beta'] = {'exe': beta_path}
-        beta_path = '/usr/lib64/opera-beta/opera-beta'
-        if 'Opera beta' not in browsers and os.path.isfile(beta_path):
-            browsers['Opera beta'] = {'exe': beta_path}
-        dev_path = '/usr/lib/x86_64-linux-gnu/opera-developer/opera-developer'
-        if 'Opera developer' not in browsers and os.path.isfile(dev_path):
-            browsers['Opera developer'] = {'exe': dev_path}
-        dev_path = '/usr/lib64/opera-developer/opera-developer'
-        if 'Opera developer' not in browsers and os.path.isfile(dev_path):
-            browsers['Opera developer'] = {'exe': dev_path}
         # Firefox browsers
         firefox_path = '/usr/lib/firefox/firefox'
         if 'Firefox' not in browsers and os.path.isfile(firefox_path):
@@ -730,20 +683,6 @@ def find_browsers(options):
             browsers['Firefox Nightly'] = {'exe': nightly_path,
                                            'type': 'Firefox',
                                            'log_level': 5}
-        # Brave
-        brave_path = '/opt/brave.com/brave/brave-browser'
-        if 'Brave' not in browsers and os.path.isfile(brave_path):
-            browsers['Brave'] = {'exe': brave_path}
-        brave_path = '/opt/brave.com/brave-beta/brave-browser-beta'
-        if 'Brave Beta' not in browsers and os.path.isfile(brave_path):
-            browsers['Brave Beta'] = {'exe': brave_path}
-        brave_path = '/opt/brave.com/brave-dev/brave-browser-dev'
-        if 'Brave Dev' not in browsers and os.path.isfile(brave_path):
-            browsers['Brave Dev'] = {'exe': brave_path}
-        brave_path = '/opt/brave.com/brave-nightly/brave-browser-nightly'
-        if 'Brave Nightly' not in browsers and os.path.isfile(brave_path):
-            browsers['Brave Nightly'] = {'exe': brave_path}
-
     elif plat == "Darwin":
         chrome_path = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
         if 'Chrome' not in browsers and os.path.isfile(chrome_path):
