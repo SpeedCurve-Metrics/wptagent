@@ -258,9 +258,7 @@ class NetLog():
                     if scheme and origin and path:
                         request['url'] = scheme + u'://' + origin + path
 
-                # TODO (AD) What's the purpose of the check for 192.168.10.x?        
-                if 'url' in request and not request['url'].startswith('http://127.0.0.1') and \
-                        not request['url'].startswith('http://192.168.10.'):
+                if 'url' in request and not request['url'].startswith('http://127.0.0.1'):
                     request_host = urlparse(request['url']).hostname
                     if request_host not in known_hosts:
                         known_hosts.append(request_host)
