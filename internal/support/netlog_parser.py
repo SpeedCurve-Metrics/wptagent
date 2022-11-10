@@ -4,9 +4,12 @@ Process a Chrome Netlog into a set of requests for further processing by the age
 
 Majority of the code is ported from devtools_parser.py 
 
-Chromium Code that generates NetLog https://source.chromium.org/chromium/chromium/src/+/main:net/log/
+Useful links
+    Chromium Code to generates NetLog https://source.chromium.org/chromium/chromium/src/+/main:net/log/
+    Docs on format https://www.chromium.org/developers/design-documents/network-stack/netlog/
+    Docs on Chromium network stack https://source.chromium.org/chromium/chromium/src/+/main:net/docs/net-log.md
 
-Needs cleaning up to make it more 'pythonic'
+TODO (AD) Needs cleaning up to make it more 'pythonic' - snake case etc.
 """
 
 """
@@ -51,7 +54,7 @@ except BaseException:
     import json
 
 
-class NetLog():
+class NetLogParser():
     """Main class"""
     def __init__(self):
         self.netlog = {'bytes_in': 0, 'bytes_out': 0, 'next_request_id': 1000000}
@@ -67,9 +70,9 @@ class NetLog():
 #
 # NetLog format is typically:
 #
-# {"constants": {…} 
+# {"constants": {...} 
 # events: [
-#  …  
+#  ... 
 # ]}
 #
 # The closing ]} is often missing making whole file invalid JSON in some tools
@@ -132,11 +135,13 @@ class NetLog():
 #
 # Process an individual Netlog event
 #
+# Preprocess events by replacing number constants with strings
+# Then process using code ported from trace_parser.py
+#
 # Needs a tidy up and lots of error checking
 #
 # TODO(AD)
 #   Is using try/except just being lazy here - does it need better checks?
-#   Convert source.time to an integer???
 #   Reuse type for the string rather than add name to entry?
 #   This takes a minimal view ATM what other fields need converting?
 #
@@ -151,10 +156,11 @@ class NetLog():
                 if 'type' in event['source']:
                     event['source']['name'] = self.constants['logSourceType'][event['source']['type']]
                 if 'time' in event['source']:
-                    event['source']['time'] = int(event['source']['time']) # TODO(AD) is int large enough in python 2.7?
+                    event['source']['time'] = int(event['source']['time']) * 1000 # TODO(AD) is int large enough in python 2.7?
             
+            # * 1000 to convert to same scale as CDP logging / event tracing data
             if 'time' in event:
-                event['time'] = int(event['time']) # TODO(AD) is int large enough in python 2.7?
+                event['time'] = int(event['time']) * 1000 # TODO(AD) is int large enough in python 2.7?
 
             self.ProcessNetlogEvent(event)
         except Exception as error: 
@@ -975,10 +981,9 @@ def main():
 
     start = time.time()
 
-    netlog = NetLog()
+    netlog = NetLogParser()
     netlog.process_netlog(options.netlog) ## what happens if this fails?
     netlog.write_netlog_requests(options.out)
-    pass
 
     end = time.time()
     elapsed = end - start
