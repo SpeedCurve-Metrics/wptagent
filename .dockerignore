@@ -1,1 +1,14 @@
+Dockerfile
 .git
+.DS_Store
+wptagent/gnirehtet/*
+wptagent/internal/support/android/*
+wptagent/internal/support/dummynet/*
+wptagent/internal/support/edge/*
+wptagent/internal/support/IE/*
+wptagent/internal/support/ios/*
+wptagent/internal/support/osx/*
+wptagent/internal/support/windows/*
+wptagent/internal/support/winshaper/*
+wptagent/simple-rt/*
+wptagent/vpn-reverse-tether/*
