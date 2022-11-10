@@ -33,7 +33,7 @@ Build the container directly from GitHub
 docker build https://github.com/SpeedCurve-Metrics/wptagent.git#docker-release -t speedcurve-agent
 ```
 
-Alternatively the container can be built from the *root* folder of a copy of the repo
+Alternatively the container can be built from the *root* folder in the **docker-release** branch of the repo
 
 ```
 docker build -t speedcurve-agent . 
