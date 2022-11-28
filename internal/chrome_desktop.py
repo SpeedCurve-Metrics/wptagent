@@ -15,7 +15,6 @@ import sys
 from .desktop_browser import DesktopBrowser
 from .devtools_browser import DevtoolsBrowser
 from .support.netlog_parser import NetLogParser
-from .net_logger import NetLogger
 
 # try a fast json parser if it is installed
 try:
