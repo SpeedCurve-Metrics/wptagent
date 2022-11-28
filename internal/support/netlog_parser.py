@@ -65,6 +65,14 @@ class NetLogParser():
         self.constants = {}
         return
 
+    def clear_requests(self):
+        """ Remove any existing request information (keep constants) """
+        self.netlog = {'bytes_in': 0, 'bytes_out': 0, 'next_request_id': 1000000}
+        self.start_time = None
+        self.marked_start_time = None
+        self.netlog_requests = None
+        self.netlog_event_types = {}
+
 #
 # process_netlog
 #
@@ -149,7 +157,7 @@ class NetLogParser():
 
         try:
             if 'phase' in event:
-                event['phase'] = [event['phase']]
+                event['phase'] = self.constants['logEventPhase'][event['phase']]
             if 'type' in event:
                 event['name'] = self.constants['logEventTypes'][event['type']]
             if 'source' in event:
