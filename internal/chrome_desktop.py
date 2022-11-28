@@ -9,9 +9,30 @@ import os
 import platform
 import subprocess
 import shutil
+import threading
 import time
+import sys
 from .desktop_browser import DesktopBrowser
 from .devtools_browser import DevtoolsBrowser
+from .support.netlog_parser import NetLogParser
+
+# try a fast json parser if it is installed
+try:
+    import ujson as json
+except BaseException:
+    import json
+
+if (sys.version_info >= (3, 0)):
+    from urllib.parse import urlparse # pylint: disable=import-error
+    unicode = str
+    GZIP_TEXT = 'wt'
+    GZIP_READ_TEXT = 'rt'
+else:
+    from urlparse import urlparse # pylint: disable=import-error
+    GZIP_TEXT = 'w'
+    GZIP_READ_TEXT = 'r'
+
+
 
 CHROME_COMMAND_LINE_OPTIONS = [
     '--allow-running-insecure-content',
@@ -80,6 +101,16 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         self.connected = False
         self.is_chrome = True
 
+        # TODO (AD) Review
+        self.netlog_pipe = None
+        self.netlog_in = None
+        self.netlog_file = None
+        self.netlog_out = None
+
+        self.netlog_lock = threading.Lock()
+        self.netlog_thread = None
+        self.netlog = None
+
     def launch(self, job, task):
         """Launch the browser"""
         self.install_policy()
@@ -95,9 +126,36 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         args.append('--remote-debugging-port={0:d}'.format(task['port']))
         if 'ignoreSSL' in job and job['ignoreSSL']:
             args.append('--ignore-certificate-errors')
+
+    # TODO (AD) Review
+
+        streamed_netlog = False
+
+        if platform.system() in ["Linux", "Darwin"]:
+            self.netlog_pipe = os.path.join(task['dir'], 'netlog.pipe')
+            try:            
+                # Make a pipe and set it as the sink for Chrome netlog events
+                os.mkfifo(self.netlog_pipe)
+                args.append('--log-net-log="{0}"'.format(self.netlog_pipe))
+                streamed_netlog = True
+
+                # Process stream on a separate thread
+                self.netlog_thread = threading.Thread(target=self.process_netlog_stream)
+                self.netlog_thread.start()
+
+                self.netlog = NetLogParser()
+
+            except Exception:
+                logging.exception('Error creating pipe for NetLog')
+
+        # If we need to keep the netlog create file to write it to
         if 'netlog' in job and job['netlog']:
-            netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
-            args.append('--log-net-log="{0}"'.format(netlog_file))
+            self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
+            self.netlog_out = open(self.netlog_file, 'wb')
+
+            if not streamed_netlog:
+                args.append('--log-net-log="{0}"'.format(self.netlog_file))
+
         if 'profile' in task:
             args.append('--user-data-dir="{0}"'.format(task['profile']))
             self.setup_prefs(task['profile'])
@@ -171,21 +229,90 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         """Run javascipt"""
         return DevtoolsBrowser.execute_js(self, script)
 
+# TODO (AD) Review
+    def process_netlog_stream(self):
+        """Read the netlog pipe in a background thread"""
+
+        logging.debug('process_netlog_stream entry')
+
+        with self.netlog_lock:
+            self.netlog_in = open(self.netlog_pipe, 'r')
+
+        if self.netlog_in:
+            logging.debug('Netlog pipe connected...')
+
+# TODO (AD) This is a variation of the code in netlog_parser, is it possible to merge them?
+            processing_events = False
+            for line in self.netlog_in:
+
+                # Save a copy of the netlog if we need to
+                with self.netlog_lock:
+                    if self.netlog_out:
+                        self.netlog_out.write(line)
+
+                try:
+                    with self.netlog_lock:
+                        if processing_events:
+                            if self.recording and line.startswith('{'):
+                                line = line.strip(', \r\n')
+                                if self.netlog:
+                                    event = json.loads(line)
+                                    self.netlog.process_event(event)
+                        elif line.startswith('{"constants":'):
+                            if self.netlog:
+                                raw = json.loads(line + '}')
+                                if raw and 'constants' in raw:
+                                    self.netlog.process_constants(raw['constants'])
+                        elif line.startswith('"events": ['):
+                            processing_events = True
+                except Exception as error:
+                    logging.exception('Error processing netlog: ' + line)
+                    logging.exception(error)
+
+        logging.debug('process_netlog_stream exit')
+
+
+# Called at end of each run
     def stop(self, job, task):
         if self.connected:
             DevtoolsBrowser.disconnect(self)
         DesktopBrowser.stop(self, job, task)
         # Make SURE the chrome processes are gone
+        # TODO (AD) add Darwin check here too?
         if platform.system() == "Linux":
             subprocess.call(['killall', '-9', 'chrome'])
-        netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
-        if os.path.isfile(netlog_file):
-            netlog_gzip = netlog_file + '.gz'
-            with open(netlog_file, 'rb') as f_in:
+
+        # Stop processing NetLog and clean up
+        with self.netlog_lock:
+            if self.netlog_in is not None:
+                self.netlog_in.close()
+                self.netlog_in = None
+
+        if self.netlog_thread is not None:
+            try:
+                self.netlog_thread.join(30)
+            except Exception:
+                logging.exception('Error NetLog parsingterminating thread')
+        self.netlog_thread = None
+
+        if self.netlog_pipe is not None:
+            try:
+                os.unlink(self.netlog_pipe)
+            except Exception:
+                logging.debug('Error closing netlog pipe')
+            self.netlog_pipe = None
+
+        if self.netlog_file and os.path.isfile(self.netlog_file):
+            logging.debug('Compressing netlog')
+            netlog_gzip = self.netlog_file + '.gz'
+            with open(self.netlog_file, 'rb') as f_in:
                 with gzip.open(netlog_gzip, 'wb', 7) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             if os.path.isfile(netlog_gzip):
-                os.remove(netlog_file)
+                os.remove(self.netlog_file)
+
+        self.netlog = None
+
         self.remove_policy()
 
     def setup_prefs(self, profile_dir):
@@ -222,6 +349,11 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
     def on_start_recording(self, task):
         """Notification that we are about to start an operation that needs to be recorded"""
         DesktopBrowser.on_start_recording(self, task)
+
+        # Remove exisiting requests in NetLog Parser (need to keep constants for parsing future events)
+        with self.netlog_lock:
+            self.netlog.clear_requests();
+
         DevtoolsBrowser.on_start_recording(self, task)
 
     def on_stop_capture(self, task):
@@ -231,7 +363,18 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
 
     def on_stop_recording(self, task):
         """Notification that we are about to start an operation that needs to be recorded"""
+
+        logging.debug('on_stop_recording')
+
         DesktopBrowser.on_stop_recording(self, task)
+
+        # Write out the netlog requests for this step
+        with self.netlog_lock:
+            if self.netlog:
+                netlog_requests = os.path.join(task['dir'], task['prefix']) + '_netlog_requests.json.gz'
+                logging.debug('Writing ' + netlog_requests)
+                self.netlog.write_netlog_requests(netlog_requests)
+
         DevtoolsBrowser.on_stop_recording(self, task)
 
     def on_start_processing(self, task):
