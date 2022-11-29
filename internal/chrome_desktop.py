@@ -251,10 +251,10 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
                         self.netlog_out.write(line)
 
                 try:
+                    line = line.strip(', \r\n')
                     with self.netlog_lock:
                         if processing_events:
                             if self.recording and line.startswith('{'):
-                                line = line.strip(', \r\n')
                                 if self.netlog:
                                     event = json.loads(line)
                                     self.netlog.process_event(event)
