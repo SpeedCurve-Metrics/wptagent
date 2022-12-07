@@ -165,6 +165,8 @@ class NetLogParser():
                     event['source']['name'] = self.constants['logSourceType'][event['source']['type']]
                 if 'time' in event['source']:
                     event['source']['time'] = int(event['source']['time']) * 1000 # TODO(AD) is int large enough in python 2.7?
+                if 'start_time' in event['source']:
+                    event['source']['time'] = int(event['source']['start_time']) * 1000 # TODO(AD) is int large enough in python 2.7?
             
             # * 1000 to convert to same scale as CDP logging / event tracing data
             if 'time' in event:
@@ -420,9 +422,10 @@ class NetLogParser():
                         if 'host' in dns and 'start' in dns and 'end' in dns \
                                 and dns['end'] >= dns['start'] and 'address_list' in dns:
                             hostname = dns['host']
-                            separator = hostname.find(':')
+                            separator = hostname.find('://')
                             if separator > 0:
-                                hostname = hostname[:separator]
+#                                hostname = hostname[:separator]
+                                hostname = hostname[separator + 3:]
                             dns['elapsed'] = dns['end'] - dns['start']
                             if hostname not in dns_lookups:
                                 dns_lookups[hostname] = dns
@@ -754,18 +757,20 @@ class NetLogParser():
             parent_id = params['source_dependency']['id']
             if 'connect_job' in self.netlog and parent_id in self.netlog['connect_job']:
                 self.netlog['connect_job'][parent_id]['dns'] = request_id
-        if name == 'HOST_RESOLVER_IMPL_REQUEST' and 'phase' in event:
+#        if name == 'HOST_RESOLVER_SYSTEM_TASK' and 'phase' in event:
+# https://source.chromium.org/chromium/chromium/src/+/main:net/log/net_log_event_type_list.h;bpv=1;bpt=0;drc=9600a6c5b3ec6ab79b621b873cc95252512f310a;dlc=6c74820452efb7bf001b84cec2e38d5956f5f2a2
+        if name == 'HOST_RESOLVER_MANAGER_REQUEST' and 'phase' in event:
             if event['phase'] == 'PHASE_BEGIN':
-                if 'start' not in entry or event['time'] < entry['source']['start']:
+                if 'start' not in entry or event['time'] < entry['start']: # entry['source']['start']:
                     entry['start'] = event['time']
             if event['phase'] == 'PHASE_END':
                 if 'end' not in entry or event['time'] > entry['end']:
                     entry['end'] = event['time']
-        if 'start' not in entry and name == 'HOST_RESOLVER_IMPL_ATTEMPT_STARTED':
+        if 'start' not in entry and name == 'HOST_RESOLVER_MANAGER_ATTEMPT_STARTED':
             entry['start'] = event['time']
-        if name == 'HOST_RESOLVER_IMPL_ATTEMPT_FINISHED':
+        if name == 'HOST_RESOLVER_MANAGER_ATTEMPT_FINISHED':
             entry['end'] = event['time']
-        if name == 'HOST_RESOLVER_IMPL_CACHE_HIT':
+        if name == 'HOST_RESOLVER_MANAGER_CACHE_HIT':
             if 'end' not in entry or event['time'] > entry['end']:
                 entry['end'] = event['time']
         if 'host' not in entry and 'host' in params:
