@@ -57,6 +57,7 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-device-discovery-notifications',
     '--disable-domain-reliability',
     '--disable-fetching-hints-at-navigation-start',
+    '--disable-gaia-services',
     '--disable-hang-monitor',
     '--disable-notifications',
     '--disable-prompt-on-repost',
@@ -295,16 +296,20 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         # Stop processing NetLog and clean up
         if self.netlog_thread is not None:
             try:
-                self.netlog_thread.join(30)
+                self.netlog_thread.join(60)
             except Exception:
                 logging.exception('Error terminating NetLog Parsing thread')
         self.netlog_thread = None
 
         # Close file that reads pipe when the netlog thread has completed
         with self.netlog_lock:
-            if self.netlog_in is not None:
-                self.netlog_in.close()
-                self.netlog_in = None
+            try:
+                if self.netlog_in is not None:
+                    self.netlog_in.close()
+            except Exception:
+                logging.exception('Error closing NetLog file')
+            self.netlog_in = None
+            
 
         if self.netlog_pipe is not None:
             try:
