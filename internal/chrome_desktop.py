@@ -57,6 +57,7 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-device-discovery-notifications',
     '--disable-domain-reliability',
     '--disable-fetching-hints-at-navigation-start',
+    '--disable-gaia-services',
     '--disable-hang-monitor',
     '--disable-notifications',
     '--disable-prompt-on-repost',
