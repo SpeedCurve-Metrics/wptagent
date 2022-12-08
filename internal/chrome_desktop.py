@@ -33,9 +33,20 @@ else:
     GZIP_READ_TEXT = 'r'
 
 
+#
+# Where possible prefer Chrome switches over blocking URLs
+# e.g. disable AutofillServerCommunication over blocking content-autofill.googleapis.com
+#
+# Recommended flags: https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
+# Chrome CLI switches: http://peter.sh/experiments/chromium-command-line-switches/
+# Chromium Feature switches: https://niek.github.io/chrome-features/
+# Blink Feature switches: https://source.chromium.org/chromium/chromium/src/+/main:out/Debug/gen/third_party/blink/renderer/platform/runtime_enabled_features.cc
+#
+# TODO (AD) Review current switches against Paul's recommendations
 
 CHROME_COMMAND_LINE_OPTIONS = [
     '--allow-running-insecure-content',
+    '--enable-automation',
     '--disable-back-forward-cache',
     '--disable-background-networking',
     '--disable-background-timer-throttling',
@@ -80,10 +91,14 @@ ENABLE_CHROME_FEATURES = [
 ]
 
 DISABLE_CHROME_FEATURES = [
-    'InterestFeedContentSuggestions',
+    'AutofillServerCommunication',
     'CalculateNativeWinOcclusion',
     'ChromeWhatsNewUI',
-    'OfflinePagesPrefetching'
+    'InterestFeedContentSuggestions',
+    'MediaRouter',
+    'OfflinePagesPrefetching',
+    'OptimizationHints'
+    'Translate'
 ]
 
 ENABLE_BLINK_FEATURES = [
@@ -276,24 +291,20 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
     def stop(self, job, task):
         if self.connected:
             DevtoolsBrowser.disconnect(self)
-        DesktopBrowser.stop(self, job, task)
-        # Make SURE the chrome processes are gone
-        # TODO (AD) add Darwin check here too?
-        if platform.system() == "Linux":
-            subprocess.call(['killall', '-9', 'chrome'])
 
         # Stop processing NetLog and clean up
-        with self.netlog_lock:
-            if self.netlog_in is not None:
-                self.netlog_in.close()
-                self.netlog_in = None
-
         if self.netlog_thread is not None:
             try:
                 self.netlog_thread.join(30)
             except Exception:
-                logging.exception('Error NetLog parsingterminating thread')
+                logging.exception('Error terminating NetLog Parsing thread')
         self.netlog_thread = None
+
+        # Close file that reads pipe when the netlog thread has completed
+        with self.netlog_lock:
+            if self.netlog_in is not None:
+                self.netlog_in.close()
+                self.netlog_in = None
 
         if self.netlog_pipe is not None:
             try:
@@ -312,6 +323,15 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
                 os.remove(self.netlog_file)
 
         self.netlog = None
+
+        # Stop the browser after the netlog thread completes to prevent netlog truncation
+        DesktopBrowser.stop(self, job, task)
+
+        # Make SURE the chrome processes are gone 
+        # TODO (AD) add Darwin check here too?
+        if platform.system() == "Linux":
+            subprocess.call(['killall', '-9', 'chrome'])
+
 
         self.remove_policy()
 
