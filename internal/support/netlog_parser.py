@@ -59,7 +59,7 @@ class NetLogParser():
     def __init__(self):
         self.netlog = {'bytes_in': 0, 'bytes_out': 0, 'next_request_id': 1000000}
         self.start_time = None
-        self.marked_start_time = None
+        self.marked_start_time = None # TODO (AD) Unused ???
         self.netlog_requests = None
         self.netlog_event_types = {}
         self.constants = {}
@@ -455,6 +455,7 @@ class NetLogParser():
                                                 elapsed = dns['elapsed']
                                                 request['dns_start'] = dns['start']
                                                 request['dns_end'] = dns['end']
+
                     # Make another pass for any DNS lookups that didn't establish a connection (HTTP/2 coalescing)
                     for request in requests:
                         hostname = urlparse(request['url']).hostname
@@ -473,6 +474,22 @@ class NetLogParser():
                                             request['dns_start'] = dns['start']
                                             request['dns_end'] = dns['end']
 
+
+
+                # Remove any Chrome internal requests that happen before the main request
+                # Would be better to actually prevent these requests with Chrome flags
+                found1stRequest = False
+                requestsToRemove = []
+                for index, request in enumerate(requests):
+                    if found1stRequest == False and \
+                        'initiator' in request and request['initiator'] == 'not an origin':
+                        print(index, request)
+                        requestsToRemove.append(index)
+                    else:
+                        found1stRequest = True
+                for toRemove in requestsToRemove:
+                    requests.pop(toRemove)
+
                 # Find the start timestamp if we didn't have one already
                 times = ['dns_start', 'dns_end',
                          'connect_start', 'connect_end',
@@ -483,6 +500,7 @@ class NetLogParser():
                         if time_name in request and self.marked_start_time is None:
                             if self.start_time is None or request[time_name] < self.start_time:
                                 self.start_time = request[time_name]
+
                 # Go through and adjust all of the times to be relative in ms
                 if self.start_time is not None:
                     for request in requests:
@@ -868,6 +886,8 @@ class NetLogParser():
             entry['method'] = params['method']
         if 'url' in params:
             entry['url'] = params['url'].split('#', 1)[0]
+        if 'initiator' in params:
+            entry['initiator'] = params['initiator']
         if 'start' not in entry and name == 'HTTP_TRANSACTION_SEND_REQUEST':
             entry['start'] = event['time']
         if 'headers' in params and name == 'HTTP_TRANSACTION_SEND_REQUEST_HEADERS':
