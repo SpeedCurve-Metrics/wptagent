@@ -54,7 +54,6 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-client-side-phishing-detection',
     '--disable-component-update',
     '--disable-default-apps',
-    '--disable-device-discovery-notifications',
     '--disable-domain-reliability',
     '--disable-fetching-hints-at-navigation-start',
     '--disable-gaia-services',
@@ -66,6 +65,7 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-sync',
     '--dont-require-litepage-redirect-infobar',
     '--load-media-router-component-extension=0',
+    '--metrics-recoring-only',
     '--mute-audio',
     '--net-log-capture-mode=IncludeSensitive',
     '--new-window',
@@ -98,7 +98,7 @@ DISABLE_CHROME_FEATURES = [
     'InterestFeedContentSuggestions',
     'MediaRouter',
     'OfflinePagesPrefetching',
-    'OptimizationHints'
+    'OptimizationHints',
     'Translate'
 ]
 
