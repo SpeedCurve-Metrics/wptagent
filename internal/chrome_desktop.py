@@ -52,6 +52,7 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-background-timer-throttling',
     '--disable-breakpad',
     '--disable-client-side-phishing-detection',
+    '--disable-component-extensions-with-background-pages',  # Stops Network Translate and Chat extensions
     '--disable-component-update',
     '--disable-default-apps',
     '--disable-domain-reliability',
@@ -63,15 +64,13 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-renderer-backgrounding',
     '--disable-site-isolation-trials',
     '--disable-sync',
-    '--dont-require-litepage-redirect-infobar',
     '--load-media-router-component-extension=0',
-    '--metrics-recoring-only',
+    '--metrics-recording-only',
     '--mute-audio',
     '--net-log-capture-mode=IncludeSensitive',
     '--new-window',
     '--no-default-browser-check',
     '--no-first-run',
-    '--override-https-image-compression-infobar',
     '--password-store=basic'
 ]
 
