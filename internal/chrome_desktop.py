@@ -94,6 +94,7 @@ DISABLE_CHROME_FEATURES = [
     'AutofillServerCommunication',
     'CalculateNativeWinOcclusion',
     'ChromeWhatsNewUI',
+    'HeavyAdPrivacyMitigations',
     'InterestFeedContentSuggestions',
     'MediaRouter',
     'OfflinePagesPrefetching',
@@ -164,6 +165,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
                 logging.exception('Error creating pipe for NetLog')
 
         # If we need to keep the netlog create file to write it to
+        # TODO (AD) Stop doing this for lighthouse runs
         if 'netlog' in job and job['netlog']:
             self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
             self.netlog_out = open(self.netlog_file, 'wb')
