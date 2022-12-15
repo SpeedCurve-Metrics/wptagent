@@ -477,18 +477,18 @@ class NetLogParser():
 
 
                 # Remove any Chrome internal requests that happen before the main request
+                # What would happen to requests such as OCSP ones (does Chrome make these anymore?)
                 # Would be better to actually prevent these requests with Chrome flags
-                found1stRequest = False
-                requestsToRemove = []
+                found_1st_request = False
+                requests_to_remove = []
                 for index, request in enumerate(requests):
-                    if found1stRequest == False and \
+                    if found_1st_request == False and \
                         'initiator' in request and request['initiator'] == 'not an origin':
-                        print(index, request)
-                        requestsToRemove.append(index)
+                        requests_to_remove.append(index)
                     else:
                         found1stRequest = True
-                for toRemove in requestsToRemove:
-                    requests.pop(toRemove)
+                for to_remove in requests_to_remove:
+                    requests.pop(to_remove)
 
                 # Find the start timestamp if we didn't have one already
                 times = ['dns_start', 'dns_end',
