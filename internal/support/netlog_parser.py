@@ -496,6 +496,10 @@ class NetLogParser():
                          'ssl_start', 'ssl_end',
                          'start', 'created', 'first_byte', 'end']
                 for request in requests:
+                    # Only take the timing from the first remaining request and skip others
+                    # TODO (AD) Review as this timing point should really be NavigationStart
+                    if self.start_time != None:
+                        continue
                     for time_name in times:
                         if time_name in request and self.marked_start_time is None:
                             if self.start_time is None or request[time_name] < self.start_time:
