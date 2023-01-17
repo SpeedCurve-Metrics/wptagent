@@ -1332,7 +1332,8 @@ class DevToolsClient(WebSocketClient):
         if self.trace_parser is not None and self.path_base is not None:
             start = monotonic()
             logging.debug("Post-Processing the trace netlog events")
-            self.trace_parser.post_process_netlog_events()
+# TODO (AD) Review
+#            self.trace_parser.post_process_netlog_events()
             logging.debug("Processing the trace timeline events")
             self.trace_parser.ProcessTimelineEvents()
             self.trace_parser.WriteUserTiming(self.path_base + '_user_timing.json.gz')
@@ -1341,7 +1342,8 @@ class DevToolsClient(WebSocketClient):
             self.trace_parser.WriteFeatureUsage(self.path_base + '_feature_usage.json.gz')
             self.trace_parser.WriteInteractive(self.path_base + '_interactive.json.gz')
             self.trace_parser.WriteLongTasks(self.path_base + '_long_tasks.json.gz')
-            self.trace_parser.WriteNetlog(self.path_base + '_netlog_requests.json.gz')
+# TODO (AD) Review
+#             self.trace_parser.WriteNetlog(self.path_base + '_netlog_requests.json.gz')
             self.trace_parser.WriteV8Stats(self.path_base + '_v8stats.json.gz')
             elapsed = monotonic() - start
             logging.debug("Done processing the trace events: %0.3fs", elapsed)

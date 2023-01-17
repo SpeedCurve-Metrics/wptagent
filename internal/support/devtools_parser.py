@@ -1088,6 +1088,8 @@ class DevToolsParser(object):
                 user_timing_events.sort(key=lambda x: x['ts'] if 'ts' in x else 0)
             main_frames = []
             navigation_start = None
+
+# TODO (AD) Why isnt LCP (or LargestTextPaint / LargestImagePaint) in this list? 
             names = [
                 'firstLayout',
                 'firstPaint',
