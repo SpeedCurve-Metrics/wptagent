@@ -140,6 +140,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         args.extend(['--window-position="0,0"',
                      '--window-size="{0:d},{1:d}"'.format(task['width'], task['height'])])
         args.append('--remote-debugging-port={0:d}'.format(task['port']))
+        args.append('--remote-allow-origins=*')
         if 'ignoreSSL' in job and job['ignoreSSL']:
             args.append('--ignore-certificate-errors')
 
