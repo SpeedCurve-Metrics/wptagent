@@ -118,3 +118,6 @@ COPY ./docker/linux-headless/entrypoint.sh /wptagent/entrypoint.sh
 WORKDIR /wptagent
 
 CMD ["/bin/bash", "/wptagent/entrypoint.sh"]
+
+HEALTHCHECK --interval=600s --timeout=30s --start-period=30s \
+  CMD curl -f http://localhost:8888/ping || exit 1

@@ -17,7 +17,7 @@ For this to work correctly *ifb* must be loaded on the *host*
 sudo modprobe ifb numifbs=1
 ```
 
-The also needs `NET_ADMIN` permissions and must be run with `--cap-add=NET_ADMIN`
+It also needs `NET_ADMIN` permissions and must be run with `--cap-add=NET_ADMIN`
 
 
 ### Known Issues
@@ -30,10 +30,10 @@ Firefox support is currently broken in the current container release (Nov 2022)
 Build the container directly from GitHub
 
 ```
-docker build https://github.com/SpeedCurve-Metrics/wptagent.git#docker-release -t speedcurve-agent
+docker build https://github.com/SpeedCurve-Metrics/wptagent.git#release -t speedcurve-agent
 ```
 
-Alternatively the container can be built from the *root* folder in the **docker-release** branch of the repo
+Alternatively the container can be built from the *root* folder in a branch of the repo
 
 ```
 docker build -t speedcurve-agent . 
