@@ -27,5 +27,4 @@ jobs:
       - name: Build the hello-docker Docker image
         run: |
           docker build https://github.com/SpeedCurve-Metrics/wptagent.git#${GH_BRANCH} --tag ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
-          docker run ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
           docker push ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
