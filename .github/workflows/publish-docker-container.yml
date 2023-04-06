@@ -1,0 +1,31 @@
+name: Publish Agent to GitHub Container Registry
+
+on:
+  workflow_dispatch:
+
+env:
+  GH_BRANCH: release
+  
+  DOCKER_TAG: latest
+
+jobs:
+
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Checkout the rep
+      uses: actions/checkout@v2
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build the hello-docker Docker image
+      run: |
+        git switch ${GH_BRANCH}
+        docker build . --tag ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
+        docker run ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
+        docker push ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
