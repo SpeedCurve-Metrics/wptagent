@@ -24,7 +24,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build the hello-docker Docker image
+      - name: Build Docker image and push to GitHub Container Registry
         run: |
           docker build https://github.com/SpeedCurve-Metrics/wptagent.git#${GH_BRANCH} --tag ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
           docker push ghcr.io/speedcurve-metrics/speedcurve-agent:${DOCKER_TAG}
