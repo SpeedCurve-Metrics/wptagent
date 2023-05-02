@@ -5,6 +5,7 @@
 """Main entry point for interfacing with Chrome's remote debugging protocol"""
 import base64
 import gzip
+import io
 import logging
 import multiprocessing
 import os
@@ -76,6 +77,7 @@ class DevTools(object):
         self.html_body = False
         self.all_bodies = False
         self.request_sequence = 0
+        self.script_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'js')
 
     def prepare(self):
         """Set up the various paths and states"""
@@ -241,6 +243,10 @@ class DevTools(object):
         self.send_command('Debugger.enable', {})
         self.send_command('ServiceWorker.enable', {})
         self.enable_target()
+        performance_metrics_script = os.path.join(self.script_dir, 'performance_metrics.js')
+        if os.path.isfile(performance_metrics_script):
+            with io.open(performance_metrics_script, 'r', encoding='utf-8') as script_file:
+                self.send_command('Page.addScriptToEvaluateOnNewDocument', {'source': script_file.read()})
         if len(self.workers):
             for target in self.workers:
                 self.enable_target(target['targetId'])
