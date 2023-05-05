@@ -47,8 +47,8 @@ else:
 CHROME_COMMAND_LINE_OPTIONS = [
     '--allow-running-insecure-content',
     '--enable-automation',
-    '--disable-back-forward-cache',
     '--disable-background-networking',
+    '--disable-backgrounding-occluded-windows',
     '--disable-background-timer-throttling',
     '--disable-breakpad',
     '--disable-client-side-phishing-detection',

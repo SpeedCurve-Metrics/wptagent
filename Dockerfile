@@ -12,7 +12,7 @@ LABEL author="support@speedcurve.com"
 #
 ARG CHROME_STABLE_VERSION=107.0.5304.87-1
 ARG FIREFOX_STABLE_VERSION=105.0
-ARG LIGHTHOUSE_VERSION=9.6.7
+ARG LIGHTHOUSE_VERSION=10.1.0
 ARG NODEJS_VERSION=16.x
 
 # Default Timeszone
@@ -20,7 +20,7 @@ ARG NODEJS_VERSION=16.x
 # TODO Is there are better way to do this as most customers won't be in this tz?
 # Maybe just keep it as UTC?
 #
-ENV TZ=Europe/London
+ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && \
@@ -117,4 +117,9 @@ COPY ./docker/linux-headless/entrypoint.sh /wptagent/entrypoint.sh
 
 WORKDIR /wptagent
 
+HEALTHCHECK --interval=300s --timeout=30s --start-period=30s \
+  CMD curl -f http://localhost:8888/ping || exit 1
+
 CMD ["/bin/bash", "/wptagent/entrypoint.sh"]
+
+  
