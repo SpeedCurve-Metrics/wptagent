@@ -27,6 +27,7 @@ try:
 except BaseException:
     import json
 from ws4py.client.threadedclient import WebSocketClient
+from urlmatch.urlmatch import urlmatch
 
 
 class DevTools(object):
@@ -76,6 +77,7 @@ class DevTools(object):
         self.html_body = False
         self.all_bodies = False
         self.request_sequence = 0
+        self.additional_headers = []
 
     def prepare(self):
         """Set up the various paths and states"""
@@ -264,6 +266,7 @@ class DevTools(object):
                         if category.find("*") < 0 and category not in trace_config["includedCategories"]:
                             trace_config["includedCategories"].append(category)
                 else:
+                    # TODO(AD) - review the impact of the cdp categories on test performance
                     trace_config["includedCategories"] = [
                         "toplevel",
                         "blink",
@@ -271,8 +274,9 @@ class DevTools(object):
                         "cc",
                         "gpu",
                         "blink.net",
-                        "disabled-by-default-v8.runtime_stats"
-                    ]
+                        "disabled-by-default-v8.runtime_stats",
+                        "disabled-by-default-cc.debug.cdp-perf",
+                        "cdp.perf"]
             else:
                 self.job['keep_netlog'] = False
             if 'netlog' in self.job and self.job['netlog']:
@@ -841,6 +845,7 @@ class DevTools(object):
                         except Exception:
                             pass
 
+# TODO(AD) - seems to be unused
     def colors_are_similar(self, color1, color2, threshold=15):
         """See if 2 given pixels are of similar color"""
         similar = True
@@ -870,22 +875,44 @@ class DevTools(object):
                 ret = response['result']['result']['value']
         return ret
 
-    def set_header(self, header):
-        """Add/modify a header on the outbound requests"""
+    def set_header(self, header, urlpattern):
+        """ Add/modify a header on the outbound requests
+
+            Parameters
+              header: Colon separated name:value pair for the header
+              urlpattern: URL pattern for the URLs the header should be applied too
+        """
+
         if header is not None and len(header):
             separator = header.find(':')
             if separator > 0:
                 name = header[:separator].strip()
                 value = header[separator + 1:].strip()
-                self.headers[name] = value
-                self.send_command('Network.setExtraHTTPHeaders',
-                                  {'headers': self.headers}, wait=True)
+
+                # provide a default pattern when there's none specified
+                # this applies the header to all requests i.e. the current default for setHeader name:value
+                # should this default to the origin/* being tested instead?
+                if urlpattern is None or len(urlpattern) == 0:
+                    urlpattern ='*://*/*'
+
+                self.additional_headers.append({'pattern': urlpattern, 'header': {'name': name, 'value': value}})
+
+                # patterns: [
+                #   {urlPattern: 'https://www.diy.com/*', requestStage: 'Request' },
+                #   {urlPattern: 'https://consent.truste.com/*', requestStage: 'Request' }
+                # ]
+                patterns = []
+                for entry in self.additional_headers:
+                    patterns.append({'urlPattern': entry['pattern'], 'requestStage': 'Request'})
+
+                self.send_command('Fetch.enable', {'patterns': patterns}, wait=True)
 
     def reset_headers(self):
-        """Add/modify a header on the outbound requests"""
-        self.headers = {}
-        self.send_command('Network.setExtraHTTPHeaders',
-                          {'headers': self.headers}, wait=True)
+        """Stop modifying headers on the outbound requests"""
+
+        self.additional_headers = {}
+        # This will need moving if we start supporting auth via Fetch
+        self.send_command('Fetch.disable', wait=True)
 
     def clear_cache(self):
         """Clear the browser cache"""
@@ -922,7 +949,12 @@ class DevTools(object):
             logging.exception("Error enabling target")
 
     def process_message(self, msg, target_id=None):
-        """Process an inbound dev tools message"""
+        """ Process an inbound dev tools message
+
+            Some messages may be callbacks in response to Fetch or RequestInterception
+            Others may be just 'ordinary' progress messages as resources load, browser fires events etc.      
+        """
+
         if 'method' in msg:
             parts = msg['method'].split('.')
             if len(parts) >= 2:
@@ -940,6 +972,8 @@ class DevTools(object):
                     self.process_css_event(event, msg)
                 elif category == 'Target':
                     self.process_target_event(event, msg)
+                elif category == 'Fetch':
+                    self.process_fetch_event(event, msg)
                 elif self.recording:
                     self.log_dev_tools_event(msg)
         if 'id' in msg:
@@ -1005,7 +1039,7 @@ class DevTools(object):
                 result = self.send_command("Page.handleJavaScriptDialog",
                                            {"accept": True}, wait=True)
                 if result is not None and 'error' in result:
-                    self.task['error'] = "Page opened a modal dailog"
+                    self.task['error'] = "Page opened a modal dialog"
         elif event == 'interstitialShown':
             self.main_thread_blocked = True
             logging.debug("Page opened a modal interstitial")
@@ -1170,6 +1204,51 @@ class DevTools(object):
                 logging.debug(msg['params']['message'][:200])
                 target_message = json.loads(msg['params']['message'])
                 self.process_message(target_message, target_id=target_id)
+
+    def process_fetch_event(self, event, msg):
+        """ Process Fetch.* devtools events
+
+            https://chromedevtools.github.io/devtools-protocol/tot/Fetch/ 
+
+            Parameters:
+              event: Name of Fetch.* event from the browser e.g. requestPaused, authRequired
+              msg: JSON object containing details of the event
+     
+        """
+        requestId = None
+    
+        if 'requestId' in msg['params']:
+            requestId = msg['params']['requestId']
+        else:
+            logging.error('process_fetch_event: requestId missing')
+
+        if event == 'requestPaused':
+            headers = []
+
+            try:
+                # Check if URL matches one of the ones for header patters and add appropriate header
+                # lookup table needs to contain URL pattern, name & value pair
+                # [{'pattern': url, 'header': {'name': name, 'value': value}}]
+                #
+                # iterate through patterns to find ones that match the header for the current request
+                for entry in self.additional_headers:
+                    logging.debug(entry['pattern'], msg['params']['request']['url'])
+
+                    # TODO (AD) find a solution for urlmatch and unicode strings - str does a conversion here
+                    if urlmatch(str(entry['pattern']), str(msg['params']['request']['url'])):
+                        headers.append(entry['header'])
+
+            except Exception as exception:
+                logging.exception(exception)
+            
+            # continue request even if no headers are to be updated otherwise test will hang
+            self.send_command('Fetch.continueRequest', {'requestId': requestId, 'headers': headers})
+        else:
+            # request will hang if execution reaches this point
+            # Fetch.continueWithAuth is only other Fetch event ATM
+            logging.error('process_fetch_event: unknown event {event}'.format(event))
+         
+
 
     def log_dev_tools_event(self, msg):
         """Log the dev tools events to a file"""

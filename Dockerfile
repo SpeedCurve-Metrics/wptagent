@@ -111,6 +111,7 @@ RUN apt-get update && \
 
 COPY ./wptagent.py /wptagent/wptagent.py
 COPY ./internal /wptagent/internal
+COPY ./urlmatch /wptagent/urlmatch
 COPY ./ws4py /wptagent/ws4py
 
 COPY ./docker/linux-headless/entrypoint.sh /wptagent/entrypoint.sh
