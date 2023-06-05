@@ -58,7 +58,7 @@ The additional headers array follow this format
 }]
 ```
 
-If there's no pattern specified in the setHeader command then a default pattern of *://*/* is applied. This should perhaps default to the origin of the page being tested instead
+If there's no pattern specified in the setHeader command then a default pattern of *://*/* is applied. This should perhaps default to the origin of the page being tested instead.
 
 #### devtools.py:reset_headers
 
@@ -75,6 +75,6 @@ To avoid the test hanging the error handling attempts to always return a respons
 
 Comparisons between the URL and the URL Pattern are made using [urlmatch](https://github.com/jessepollak/urlmatch). This module doesn't support unicode strings so the strings are forced to non unicode which may present issues and should be revisited in the future.
 
-*://*/* will match all requests
-https://*.speedcurve.com/* will match all requests to https://www.speedcurve.com, https://app.speedcurve.com etc
-https://www.speedcurve.com will only match request to https://www.speedcurve.com/ and won't match https://www.speedcurve.com/some-path 
+`*://*/*` will match all requests
+`https://*.speedcurve.com/*` will match all requests to https://www.speedcurve.com, https://app.speedcurve.com etc
+`https://www.speedcurve.com` will only match request to https://www.speedcurve.com/ and won't match https://www.speedcurve.com/some-path 

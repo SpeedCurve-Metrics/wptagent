@@ -256,6 +256,7 @@ class DevTools(object):
                 self.send_command('Profiler.enable', {})
                 self.send_command('Profiler.setSamplingInterval', {'interval': 100})
                 self.send_command('Profiler.start', {})
+
             trace_config = {"recordMode": "recordAsMuchAsPossible",
                             "includedCategories": []}
             if 'trace' in self.job and self.job['trace']:
@@ -266,7 +267,6 @@ class DevTools(object):
                         if category.find("*") < 0 and category not in trace_config["includedCategories"]:
                             trace_config["includedCategories"].append(category)
                 else:
-                    # TODO(AD) - review the impact of the cdp categories on test performance
                     trace_config["includedCategories"] = [
                         "toplevel",
                         "blink",
@@ -274,9 +274,7 @@ class DevTools(object):
                         "cc",
                         "gpu",
                         "blink.net",
-                        "disabled-by-default-v8.runtime_stats",
-                        "disabled-by-default-cc.debug.cdp-perf",
-                        "cdp.perf"]
+                        "disabled-by-default-v8.runtime_stats"]
             else:
                 self.job['keep_netlog'] = False
             if 'netlog' in self.job and self.job['netlog']:
@@ -312,6 +310,14 @@ class DevTools(object):
                 trace_config["includedCategories"].append("netlog")
             if "disabled-by-default-netlog" not in trace_config["includedCategories"]:
                 trace_config["includedCategories"].append("disabled-by-default-netlog")
+
+            # Track how long CDP Fetch requests get paused for
+            # TODO(AD) - review the impact of the cdp categories on test performance
+            if "disabled-by-default-cc.debug.cdp-perf" not in trace_config["includedCategories"]:
+                trace_config["includedCategories"].append("disabled-by-default-cc.debug.cdp-perf")
+            if "cdp.perf" not in trace_config["includedCategories"]:
+                trace_config["includedCategories"].append("cdp.perf")
+
             self.trace_enabled = True
             self.send_command('Tracing.start',
                               {'traceConfig': trace_config},
@@ -910,7 +916,7 @@ class DevTools(object):
     def reset_headers(self):
         """Stop modifying headers on the outbound requests"""
 
-        self.additional_headers = {}
+        self.additional_headers = []
         # This will need moving if we start supporting auth via Fetch
         self.send_command('Fetch.disable', wait=True)
 
