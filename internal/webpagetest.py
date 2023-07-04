@@ -701,6 +701,7 @@ class WebPageTest(object):
                         job['url'] = target
                         record = True
                     elif command == 'addheader' or command == 'setheader':
+                        # AD - Think these are collected here to be passed to the LH test
                         if target is not None and len(target):
                             separator = target.find(':')
                             if separator > 0:
