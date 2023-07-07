@@ -493,8 +493,7 @@ class DevtoolsBrowser(object):
                     needs_mark = False
                 script = self.prepare_script_for_record(script, needs_mark) #pylint: disable=no-member
                 self.devtools.start_navigating()
-            result = self.devtools.execute_js(script)
-            logging.debug(result)
+            self.devtools.execute_js(script)
         elif command['command'] == 'sleep':
             delay = min(60, max(0, int(re.search(r'\d+', str(command['target'])).group())))
             if delay > 0:
@@ -544,9 +543,9 @@ class DevtoolsBrowser(object):
             except Exception:
                 logging.exception('Error setting location')
         elif command['command'] == 'addheader':
-            self.devtools.set_header(command['target'], command['value'])
+            self.devtools.set_header(command['target'])
         elif command['command'] == 'setheader':
-            self.devtools.set_header(command['target'], command['value'])
+            self.devtools.set_header(command['target'])
         elif command['command'] == 'resetheaders':
             self.devtools.reset_headers()
         elif command['command'] == 'clearcache':
