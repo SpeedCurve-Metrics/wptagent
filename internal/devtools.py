@@ -3,6 +3,7 @@
 # Use of this source code is governed by the Apache 2.0 license that can be
 # found in the LICENSE file.
 """Main entry point for interfacing with Chrome's remote debugging protocol"""
+"""Protocol docs: https://chromedevtools.github.io/devtools-protocol/"""
 import base64
 import gzip
 import logging
@@ -972,6 +973,8 @@ class DevTools(object):
                 elif category == 'Network' and self.recording:
                     self.log_dev_tools_event(msg)
                     self.process_network_event(event, msg, target_id)
+                elif category == 'Debugger':
+                    self.process_debugger_event(event, msg)
                 elif category == 'Inspector' and target_id is None:
                     self.process_inspector_event(event)
                 elif category == 'CSS' and self.recording:
@@ -1181,6 +1184,16 @@ class DevTools(object):
                 ignore_activity = True
             if not self.task['stop_at_onload'] and not ignore_activity:
                 self.last_activity = monotonic()
+
+    # debugger; statements cause the test to timeout while waiting for page load to fire
+    # Test cases:
+    #   https://andydavies.github.io/agent-tests/debugger/debugger.html
+    #   https://andydavies.github.io/agent-tests/debugger/no-debugger.html
+    def process_debugger_event(self, event, msg):
+        """Process Debugger.* dev tools events"""
+        if event == 'paused':
+            logging.debug("Page contains debugger; statement")
+            self.send_command('Debugger.resume', {})
 
     def process_inspector_event(self, event):
         """Process Inspector.* dev tools events"""
