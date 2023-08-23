@@ -1185,12 +1185,16 @@ class DevTools(object):
             if not self.task['stop_at_onload'] and not ignore_activity:
                 self.last_activity = monotonic()
 
-    # debugger; statements cause the test to timeout while waiting for page load to fire
-    # Test cases:
-    #   https://andydavies.github.io/agent-tests/debugger/debugger.html
-    #   https://andydavies.github.io/agent-tests/debugger/no-debugger.html
     def process_debugger_event(self, event, msg):
-        """Process Debugger.* dev tools events"""
+        """ Process Debugger.* dev tools events
+
+            debugger; statements cause the test to timeout while waiting for page load to fire
+
+            Test cases:
+                https://andydavies.github.io/agent-tests/debugger/debugger.html
+                https://andydavies.github.io/agent-tests/debugger/no-debugger.html
+        """
+
         if event == 'paused':
             logging.debug("Page contains debugger; statement")
             self.send_command('Debugger.resume', {})
@@ -1245,14 +1249,22 @@ class DevTools(object):
             headers = []
 
             try:
+
+                # Extract the headers from the request so they can be merged with any additional headers
+                request = msg['params']['request']
+                existing_headers = request['headers']
+                keys = list(existing_headers)
+                for key in keys:
+                    value = existing_headers[key]
+                    header = {'name': key, 'value': value}
+                    headers.append(header)
+
                 # Check if URL matches one of the ones for header patters and add appropriate header
                 # lookup table needs to contain URL pattern, name & value pair
                 # [{'pattern': url, 'header': {'name': name, 'value': value}}]
                 #
                 # iterate through patterns to find ones that match the header for the current request
                 for entry in self.additional_headers:
-                    logging.debug(entry['pattern'], msg['params']['request']['url'])
-
                     # TODO (AD) find a solution for urlmatch and unicode strings - str does a conversion here
                     if urlmatch(str(entry['pattern']), str(msg['params']['request']['url'])):
                         headers.append(entry['header'])
