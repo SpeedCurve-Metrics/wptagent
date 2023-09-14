@@ -28,6 +28,7 @@ try:
 except BaseException:
     import json
 from ws4py.client.threadedclient import WebSocketClient
+from urlmatch.urlmatch import urlmatch
 
 
 class DevTools(object):
@@ -77,6 +78,7 @@ class DevTools(object):
         self.html_body = False
         self.all_bodies = False
         self.request_sequence = 0
+        self.additional_headers = []
 
     def prepare(self):
         """Set up the various paths and states"""
@@ -255,6 +257,7 @@ class DevTools(object):
                 self.send_command('Profiler.enable', {})
                 self.send_command('Profiler.setSamplingInterval', {'interval': 100})
                 self.send_command('Profiler.start', {})
+
             trace_config = {"recordMode": "recordAsMuchAsPossible",
                             "includedCategories": []}
             if 'trace' in self.job and self.job['trace']:
@@ -272,8 +275,7 @@ class DevTools(object):
                         "cc",
                         "gpu",
                         "blink.net",
-                        "disabled-by-default-v8.runtime_stats"
-                    ]
+                        "disabled-by-default-v8.runtime_stats"]
             else:
                 self.job['keep_netlog'] = False
             if 'netlog' in self.job and self.job['netlog']:
@@ -309,6 +311,14 @@ class DevTools(object):
                 trace_config["includedCategories"].append("netlog")
             if "disabled-by-default-netlog" not in trace_config["includedCategories"]:
                 trace_config["includedCategories"].append("disabled-by-default-netlog")
+
+            # Track how long CDP Fetch requests get paused for
+            # TODO(AD) - review the impact of the cdp categories on test performance
+            if "disabled-by-default-cc.debug.cdp-perf" not in trace_config["includedCategories"]:
+                trace_config["includedCategories"].append("disabled-by-default-cc.debug.cdp-perf")
+            if "cdp.perf" not in trace_config["includedCategories"]:
+                trace_config["includedCategories"].append("cdp.perf")
+
             self.trace_enabled = True
             self.send_command('Tracing.start',
                               {'traceConfig': trace_config},
@@ -842,6 +852,7 @@ class DevTools(object):
                         except Exception:
                             pass
 
+# TODO(AD) - seems to be unused
     def colors_are_similar(self, color1, color2, threshold=15):
         """See if 2 given pixels are of similar color"""
         similar = True
@@ -871,22 +882,44 @@ class DevTools(object):
                 ret = response['result']['result']['value']
         return ret
 
-    def set_header(self, header):
-        """Add/modify a header on the outbound requests"""
+    def set_header(self, header, urlpattern):
+        """ Add/modify a header on the outbound requests
+
+            Parameters
+              header: Colon separated name:value pair for the header
+              urlpattern: URL pattern for the URLs the header should be applied too
+        """
+
         if header is not None and len(header):
             separator = header.find(':')
             if separator > 0:
                 name = header[:separator].strip()
                 value = header[separator + 1:].strip()
-                self.headers[name] = value
-                self.send_command('Network.setExtraHTTPHeaders',
-                                  {'headers': self.headers}, wait=True)
+
+                # provide a default pattern when there's none specified
+                # this applies the header to all requests i.e. the current default for setHeader name:value
+                # should this default to the origin/* being tested instead?
+                if urlpattern is None or len(urlpattern) == 0:
+                    urlpattern ='*://*/*'
+
+                self.additional_headers.append({'pattern': urlpattern, 'header': {'name': name, 'value': value}})
+
+                # patterns: [
+                #   {urlPattern: 'https://www.diy.com/*', requestStage: 'Request' },
+                #   {urlPattern: 'https://consent.truste.com/*', requestStage: 'Request' }
+                # ]
+                patterns = []
+                for entry in self.additional_headers:
+                    patterns.append({'urlPattern': entry['pattern'], 'requestStage': 'Request'})
+
+                self.send_command('Fetch.enable', {'patterns': patterns}, wait=True)
 
     def reset_headers(self):
-        """Add/modify a header on the outbound requests"""
-        self.headers = {}
-        self.send_command('Network.setExtraHTTPHeaders',
-                          {'headers': self.headers}, wait=True)
+        """Stop modifying headers on the outbound requests"""
+
+        self.additional_headers = []
+        # This will need moving if we start supporting auth via Fetch
+        self.send_command('Fetch.disable', wait=True)
 
     def clear_cache(self):
         """Clear the browser cache"""
@@ -923,7 +956,12 @@ class DevTools(object):
             logging.exception("Error enabling target")
 
     def process_message(self, msg, target_id=None):
-        """Process an inbound dev tools message"""
+        """ Process an inbound dev tools message
+
+            Some messages may be callbacks in response to Fetch or RequestInterception
+            Others may be just 'ordinary' progress messages as resources load, browser fires events etc.      
+        """
+
         if 'method' in msg:
             parts = msg['method'].split('.')
             if len(parts) >= 2:
@@ -943,6 +981,8 @@ class DevTools(object):
                     self.process_css_event(event, msg)
                 elif category == 'Target':
                     self.process_target_event(event, msg)
+                elif category == 'Fetch':
+                    self.process_fetch_event(event, msg)
                 elif self.recording:
                     self.log_dev_tools_event(msg)
         if 'id' in msg:
@@ -1008,7 +1048,7 @@ class DevTools(object):
                 result = self.send_command("Page.handleJavaScriptDialog",
                                            {"accept": True}, wait=True)
                 if result is not None and 'error' in result:
-                    self.task['error'] = "Page opened a modal dailog"
+                    self.task['error'] = "Page opened a modal dialog"
         elif event == 'interstitialShown':
             self.main_thread_blocked = True
             logging.debug("Page opened a modal interstitial")
