@@ -79,6 +79,7 @@ class DevTools(object):
         self.all_bodies = False
         self.request_sequence = 0
         self.additional_headers = []
+        self.post_navigation_scripts = []
 
     def prepare(self):
         """Set up the various paths and states"""
@@ -929,6 +930,10 @@ class DevTools(object):
         """Disable the browser cache"""
         self.send_command('Network.setCacheDisabled', {'cacheDisabled': disable}, wait=True)
 
+    def add_post_navigation_script(self, script):
+        """ Add a script to be run after navigation has started """
+        self.post_navigation_scripts.append(script)
+
     def enable_target(self, target_id=None):
         """Hook up the necessary network (or other) events for the given target"""
         try:
@@ -1026,10 +1031,12 @@ class DevTools(object):
                 self.page_loaded = None
         elif event == 'frameNavigated' and 'params' in msg and \
                 'frame' in msg['params'] and 'id' in msg['params']['frame']:
-            if self.main_frame is not None and \
-                    self.main_frame == msg['params']['frame']['id'] and\
-                    'injectScript' in self.job:
-                self.execute_js(self.job['injectScript'])
+            if self.main_frame is not None and self.main_frame == msg['params']['frame']['id']: 
+                if 'injectScript' in self.job:
+                    self.execute_js(self.job['injectScript'])
+                while self.post_navigation_scripts:
+                    script = self.post_navigation_scripts.pop(0)
+                    self.execute_js(script)
         elif event == 'frameStoppedLoading' and 'params' in msg and 'frameId' in msg['params']:
             if self.main_frame is not None and \
                     not self.page_loaded and \
