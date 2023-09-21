@@ -556,6 +556,8 @@ class DevtoolsBrowser(object):
                                  int(re.search(r'\d+',
                                                str(command['target'])).group()) == 1)
             self.devtools.disable_cache(disable_cache)
+        elif command['command'] == 'injectscript':
+            self.devtools.add_post_navigation_script(command['target'])
 
     def navigate(self, url):
         """Navigate to the given URL"""
