@@ -315,6 +315,8 @@ class DevTools(object):
 
             # Track how long CDP Fetch requests get paused for
             # TODO(AD) - review the impact of the cdp categories on test performance
+            if "devtools" not in trace_config["includedCategories"]:
+                trace_config["includedCategories"].append("devtools")
             if "disabled-by-default-cc.debug.cdp-perf" not in trace_config["includedCategories"]:
                 trace_config["includedCategories"].append("disabled-by-default-cc.debug.cdp-perf")
             if "cdp.perf" not in trace_config["includedCategories"]:
