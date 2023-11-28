@@ -887,7 +887,7 @@ class WebPageTest(object):
                         target = 'document.head.style="opacity:0; !important"; document.body.style="opacity:0; !important";'
                         value = None
                     elif command == 'cleardocument':
-                        # Clears document by opening and closing it – open() will cause pagehide and other unload event handlers to fire
+                        # Clears document by opening and closing it - open() will cause pagehide and other unload event handlers to fire
                         command = 'exec'
                         target = 'document.open(); document.close();'
                         value = None

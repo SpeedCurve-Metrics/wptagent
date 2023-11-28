@@ -101,7 +101,7 @@ RUN apt-get update && \
     tornado \
     'wsaccel==0.6.3' \
     xvfbwrapper \
-    brotli \
+    'brotli==1.0.9' \
     'fonttools>=3.44.0,<4.0.0' \
     'mozrunner==7.4.0' \
     'mozfile==2.1.0' \
