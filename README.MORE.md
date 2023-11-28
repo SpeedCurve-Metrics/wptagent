@@ -113,7 +113,7 @@ run the agent in a docker container.
     * resetHeaders
     * setCookie
     * setABM
-    * click (clickAndWait)
+    * click (click)
     * selectValue
     * sendClick
     * setInnerHTML
