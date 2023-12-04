@@ -10,10 +10,10 @@ LABEL author="support@speedcurve.com"
 #
 # Firefox versions: https://download-installer.cdn.mozilla.net/pub/firefox/releases/
 #
-ARG CHROME_STABLE_VERSION=107.0.5304.87-1
-ARG FIREFOX_STABLE_VERSION=105.0
-ARG LIGHTHOUSE_VERSION=10.1.0
-ARG NODEJS_VERSION=16.x
+ARG CHROME_STABLE_VERSION=119.0.6045.199-1
+ARG FIREFOX_STABLE_VERSION=120.0.1
+ARG LIGHTHOUSE_VERSION=11.3.0
+ARG NODEJS_VERSION=20.x
 
 # Default Timeszone
 #
