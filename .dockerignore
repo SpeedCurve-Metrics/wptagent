@@ -10,5 +10,6 @@ wptagent/internal/support/ios/*
 wptagent/internal/support/osx/*
 wptagent/internal/support/windows/*
 wptagent/internal/support/winshaper/*
+wptagent/misc/adb/*
 wptagent/simple-rt/*
 wptagent/vpn-reverse-tether/*
