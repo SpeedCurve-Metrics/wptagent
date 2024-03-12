@@ -1,5 +1,6 @@
 {
   "TranslateEnabled": false,
   "PasswordManagerEnabled": false,
-  "EnableMediaRouter": false
+  "EnableMediaRouter": false,
+  "InsecurePrivateNetworkRequestsAllowed": true
 }
