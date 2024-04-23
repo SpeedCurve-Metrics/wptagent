@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 
-VIDEO_SIZE = 400
+VIDEO_SIZE = 600
 
 
 class VideoProcessing(object):

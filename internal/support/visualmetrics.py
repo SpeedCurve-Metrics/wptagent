@@ -1739,8 +1739,8 @@ def main():
                              "(if specified, frames will be converted to JPEG).")
     parser.add_argument('-l', '--full', action='store_true', default=False,
                         help="Keep full-resolution images instead of resizing to 400x400 pixels")
-    parser.add_argument('--thumbsize', type=int, default=400,
-                        help="Thumbnail size (defaults to 400).")
+    parser.add_argument('--thumbsize', type=int, default=600,
+                        help="Thumbnail size (defaults to 600).")
     parser.add_argument('-f', '--force', action='store_true', default=False,
                         help="Force processing of a video file (overwrite existing directory).")
     parser.add_argument('-o', '--orange', action='store_true', default=False,

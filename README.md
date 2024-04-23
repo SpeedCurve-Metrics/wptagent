@@ -17,6 +17,12 @@ For this to work correctly *ifb* must be loaded on the *host*
 sudo modprobe ifb numifbs=1
 ```
 
+The following command checks whether *ifb* is loaded on the host and can be executed from either the host or the container.
+
+```
+sudo lsmod | grep ifb
+```
+
 The also needs `NET_ADMIN` permissions and must be run with `--cap-add=NET_ADMIN`
 
 

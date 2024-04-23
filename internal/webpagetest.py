@@ -849,7 +849,7 @@ class WebPageTest(object):
                                     task['dns_override'].append([target, addr])
                     # Commands that get translated into exec commands
                     elif command in ['click', 'selectvalue', 'sendclick', 'setinnerhtml',
-                                     'setinnertext', 'setvalue', 'submitform']:
+                                     'setinnertext', 'setvalue', 'setvalueex', 'submitform']:
                         if target is not None:
                             # convert the selector into a querySelector
                             separator = target.find('=')
@@ -871,9 +871,27 @@ class WebPageTest(object):
                                     script += '.innerText="{0}";'.format(value.replace('"', '\\"'))
                                 elif command == 'setinnerhtml' and value is not None:
                                     script += '.innerHTML="{0}";'.format(value.replace('"', '\\"'))
+                                elif command == 'setvalueex' and value is not None:
+                                    script = '(function(){el = ' + script + ';'
+                                    script += 'proto = Object.getPrototypeOf(el); set = Object.getOwnPropertyDescriptor(proto, "value").set;'
+                                    script += 'set.call(el, "{0}");'.format(value.replace('"', '\\"'))
+                                    script += 'el.dispatchEvent(new Event("input", { bubbles: true }));'
+                                    script += 'el.dispatchEvent(new Event("change", { bubbles: true }));'
+                                    script += '})();'
                                 command = 'exec'
                                 target = script
                                 value = None
+                    elif command == 'clearscreen':
+                        # Clears screen by setting head and body opacity to 0 (head may be visible see htmlfordesigners.com as an example)
+                        command = 'exec'
+                        target = 'document.head.style="opacity:0; !important"; document.body.style="opacity:0; !important";'
+                        value = None
+                    elif command == 'cleardocument':
+                        # Clears document by opening and closing it - open() will cause pagehide and other unload event handlers to fire
+                        command = 'exec'
+                        target = 'document.open(); document.close();'
+                        value = None
+
                     if keep:
                         if record:
                             record_count += 1
