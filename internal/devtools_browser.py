@@ -134,7 +134,7 @@ class DevtoolsBrowser(object):
             if not self.options.android and 'throttle_cpu' in self.job and\
                     (not task['running_lighthouse'] or not self.job['lighthouse_config']):
                 logging.debug('DevTools CPU Throttle target: %0.3fx', self.job['throttle_cpu'])
-                logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f', 
+                logging.debug('cpu_scale_multiplier: %0.3f, throttle_cpu_requested %0.3f, throttle_cpu: %0.3f',
                     self.job['cpu_scale_multiplier'], self.job['throttle_cpu_requested'], self.job['throttle_cpu'])
                 if self.job['throttle_cpu'] > 1:
                     self.devtools.send_command("Emulation.setCPUThrottlingRate",
@@ -197,11 +197,6 @@ class DevtoolsBrowser(object):
         """Do any quick work to stop things that are capturing data"""
         if self.devtools is not None:
             self.devtools.stop_capture()
-
-    def on_stop_recording(self, task):
-        """Stop recording"""
-        if self.devtools is not None:
-            self.devtools.collect_trace()
             if self.devtools_screenshot:
                 if self.job['pngScreenShot']:
                     screen_shot = os.path.join(task['dir'],
@@ -211,6 +206,11 @@ class DevtoolsBrowser(object):
                     screen_shot = os.path.join(task['dir'],
                                                task['prefix'] + '_screen.jpg')
                     self.devtools.grab_screenshot(screen_shot, png=False, resize=600)
+
+    def on_stop_recording(self, task):
+        """Stop recording"""
+        if self.devtools is not None:
+            self.devtools.collect_trace()
             # Collect end of test data from the browser
             self.collect_browser_metrics(task)
             # Stop recording dev tools (which also collects the trace)
