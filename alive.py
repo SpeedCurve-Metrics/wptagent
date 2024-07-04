@@ -26,19 +26,19 @@ def main():
         with open('/proc/uptime', 'r') as f_in:
             uptime_seconds = int(float(f_in.readline().split()[0]))
             if uptime_seconds < 3600:
-                print('OK: Freshly booted ({0:d} seconds)'.format(uptime_seconds))
+                print(('OK: Freshly booted ({0:d} seconds)'.format(uptime_seconds)))
                 exit(0)
     elif platform.system() == "Windows":
         uptime_seconds = int(time.time()) - int(psutil.boot_time())
         if uptime_seconds < 3600:
-            print('OK: Freshly booted ({0:d} seconds)'.format(uptime_seconds))
+            print(('OK: Freshly booted ({0:d} seconds)'.format(uptime_seconds)))
             exit(0)
 
     # Check if the watchdog file has been updated in the last hour.
     if options.file and os.path.isfile(options.file):
         elapsed = int(time.time() - os.path.getmtime(options.file))
         if elapsed < 3600:
-            print('OK: File last modified {0:d} seconds ago'.format(elapsed))
+            print(('OK: File last modified {0:d} seconds ago'.format(elapsed)))
             exit(0)
 
     # Ping the provided address if requested.

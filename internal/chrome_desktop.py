@@ -24,11 +24,11 @@ except BaseException:
 
 if (sys.version_info >= (3, 0)):
     from urllib.parse import urlparse # pylint: disable=import-error
-    unicode = str
+    str = str
     GZIP_TEXT = 'wt'
     GZIP_READ_TEXT = 'rt'
 else:
-    from urlparse import urlparse # pylint: disable=import-error
+    from urllib.parse import urlparse # pylint: disable=import-error
     GZIP_TEXT = 'w'
     GZIP_READ_TEXT = 'r'
 

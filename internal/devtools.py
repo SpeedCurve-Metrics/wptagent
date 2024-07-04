@@ -17,11 +17,11 @@ import zipfile
 if (sys.version_info >= (3, 0)):
     from time import monotonic
     from urllib.parse import urlsplit # pylint: disable=import-error
-    unicode = str
+    str = str
     GZIP_TEXT = 'wt'
 else:
     from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
+    from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'w'
 try:
     import ujson as json

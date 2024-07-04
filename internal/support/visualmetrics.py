@@ -1915,10 +1915,10 @@ def main():
                         for metric in metrics:
                             data[metric['name'].replace(
                                 ' ', '')] = metric['value']
-                        print(json.dumps(data))
+                        print((json.dumps(data)))
                     else:
                         for metric in metrics:
-                            print("{0}: {1}".format(metric['name'], metric['value']))
+                            print(("{0}: {1}".format(metric['name'], metric['value'])))
         else:
             ok = check_config()
     except Exception as e:

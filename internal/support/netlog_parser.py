@@ -39,11 +39,11 @@ import time
 
 if (sys.version_info >= (3, 0)):
     from urllib.parse import urlparse # pylint: disable=import-error
-    unicode = str
+    str = str
     GZIP_TEXT = 'wt'
     GZIP_READ_TEXT = 'rt'
 else:
-    from urlparse import urlparse # pylint: disable=import-error
+    from urllib.parse import urlparse # pylint: disable=import-error
     GZIP_TEXT = 'w'
     GZIP_READ_TEXT = 'r'
 
@@ -183,7 +183,7 @@ class NetLogParser():
         
         if 'source' in event and 'id' in event['source'] and 'name' in event:
             try:
-                if isinstance(event['source']['id'], (str, unicode)):
+                if isinstance(event['source']['id'], str):
                     event['id'] = int(event['id'], 16)
 
 #                event_type = None
@@ -257,22 +257,22 @@ class NetLogParser():
                             scheme = 'https'
                     for header in request['request_headers']:
                         try:
-                            index = header.find(u':', 1)
+                            index = header.find(':', 1)
                             if index > 0:
-                                key = header[:index].strip(u': ').lower()
-                                value = header[index + 1:].strip(u': ')
-                                if key == u'scheme':
-                                    scheme = unicode(value)
-                                elif key == u'host':
-                                    origin = unicode(value)
-                                elif key == u'authority':
-                                    origin = unicode(value)
-                                elif key == u'path':
-                                    path = unicode(value)
+                                key = header[:index].strip(': ').lower()
+                                value = header[index + 1:].strip(': ')
+                                if key == 'scheme':
+                                    scheme = str(value)
+                                elif key == 'host':
+                                    origin = str(value)
+                                elif key == 'authority':
+                                    origin = str(value)
+                                elif key == 'path':
+                                    path = str(value)
                         except Exception:
                             logging.exception("Error generating url from request headers")
                     if scheme and origin and path:
-                        request['url'] = scheme + u'://' + origin + path
+                        request['url'] = scheme + '://' + origin + path
 
                 if 'url' in request and not request['url'].startswith('http://127.0.0.1'):
                     request_host = urlparse(request['url']).hostname

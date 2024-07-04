@@ -14,7 +14,7 @@ if (sys.version_info >= (3, 0)):
     from urllib.parse import urlparse # pylint: disable=import-error
     GZIP_TEXT = 'wt'
 else:
-    from urlparse import urlparse # pylint: disable=import-error
+    from urllib.parse import urlparse # pylint: disable=import-error
     GZIP_TEXT = 'w'
 
 class Traceroute(object):

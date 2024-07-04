@@ -18,7 +18,7 @@ import time
 if (sys.version_info >= (3, 0)):
     from time import monotonic
     GZIP_TEXT = 'wt'
-    unicode = str
+    str = str
 else:
     from monotonic import monotonic
     GZIP_TEXT = 'w'
@@ -411,7 +411,7 @@ class OptimizationChecks(object):
         if (sys.version_info >= (3, 0)):
             from urllib.parse import urlsplit # pylint: disable=import-error
         else:
-            from urlparse import urlsplit # pylint: disable=import-error
+            from urllib.parse import urlsplit # pylint: disable=import-error
             
         # build a list of origins and how many requests were issued to each
         origins = {}
@@ -590,7 +590,7 @@ class OptimizationChecks(object):
         if (sys.version_info >= (3, 0)):
             from urllib.parse import urlparse # pylint: disable=import-error
         else:
-            from urlparse import urlparse # pylint: disable=import-error
+            from urllib.parse import urlparse # pylint: disable=import-error
         start = monotonic()
         # First pass, build a list of domains and see if the headers or domain matches
         static_requests = {}

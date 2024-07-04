@@ -29,11 +29,11 @@ except BaseException:
     pass
 if (sys.version_info >= (3, 0)):
     from urllib.parse import urlsplit # pylint: disable=import-error
-    unicode = str
+    str = str
     GZIP_TEXT = 'wt'
     GZIP_READ_TEXT = 'rt'
 else:
-    from urlparse import urlsplit # pylint: disable=import-error
+    from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'w'
     GZIP_READ_TEXT = 'r'
 
@@ -96,7 +96,7 @@ class DevToolsParser(object):
                         if HAS_FUTURE:
                             data[key] = str(entry.encode('utf-8'), 'utf-8')
                         else:
-                            data[key] = unicode(entry)
+                            data[key] = str(entry)
                     except Exception:
                         logging.exception('Error making utf8')
         elif isinstance(data, list):
@@ -109,7 +109,7 @@ class DevToolsParser(object):
                         if HAS_FUTURE:
                             data[key] = str(entry.encode('utf-8'), 'utf-8')
                         else:
-                            data[key] = unicode(entry)
+                            data[key] = str(entry)
                     except Exception:
                         logging.exception('Error making utf8')
 
@@ -608,7 +608,7 @@ class DevToolsParser(object):
                         if HAS_FUTURE:
                             line = str(line.encode('utf-8'), 'utf-8').strip()
                         else:
-                            line = unicode(line.encode('utf-8')).strip()
+                            line = str(line.encode('utf-8')).strip()
                         if len(line):
                             request['headers']['request'].append(line)
                 elif 'response' in raw_request and 'requestHeaders' in raw_request['response']:
@@ -617,12 +617,12 @@ class DevToolsParser(object):
                             try:
                                 if HAS_FUTURE:
                                     request['headers']['request'].append(\
-                                        u'{0}: {1}'.format(str(key.encode('utf-8'), 'utf-8'),
+                                        '{0}: {1}'.format(str(key.encode('utf-8'), 'utf-8'),
                                                            str(value.encode('utf-8'), 'utf-8').strip()))
                                 else:
                                     request['headers']['request'].append(\
-                                        u'{0}: {1}'.format(unicode(key.encode('utf-8')),
-                                                           unicode(value.encode('utf-8')).strip()))
+                                        '{0}: {1}'.format(str(key.encode('utf-8')),
+                                                           str(value.encode('utf-8')).strip()))
                             except Exception:
                                 logging.exception('Error processing response headers')
                 elif 'headers' in raw_request:
@@ -631,12 +631,12 @@ class DevToolsParser(object):
                             try:
                                 if HAS_FUTURE:
                                     request['headers']['request'].append(\
-                                        u'{0}: {1}'.format(str(key.encode('utf-8'), 'utf-8'),
+                                        '{0}: {1}'.format(str(key.encode('utf-8'), 'utf-8'),
                                                            str(value.encode('utf-8'), 'utf-8').strip()))
                                 else:
                                     request['headers']['request'].append(\
-                                        u'{0}: {1}'.format(unicode(key.encode('utf-8')),
-                                                           unicode(value.encode('utf-8')).strip()))
+                                        '{0}: {1}'.format(str(key.encode('utf-8')),
+                                                           str(value.encode('utf-8')).strip()))
                             except Exception:
                                 logging.exception('Error processing request headers')
                 if 'response' in raw_request and 'headersText' in raw_request['response']:
@@ -645,7 +645,7 @@ class DevToolsParser(object):
                             if HAS_FUTURE:
                                 line = str(line.encode('utf-8'), 'utf-8').strip()
                             else:
-                                line = unicode(line.encode('utf-8')).strip()
+                                line = str(line.encode('utf-8')).strip()
                             if len(line):
                                 request['headers']['response'].append(line)
                         except Exception:
@@ -656,12 +656,12 @@ class DevToolsParser(object):
                             try:
                                 if HAS_FUTURE:
                                     request['headers']['response'].append(\
-                                        u'{0}: {1}'.format(str(key.encode('utf-8'), 'utf-8'),
+                                        '{0}: {1}'.format(str(key.encode('utf-8'), 'utf-8'),
                                                            str(value.encode('utf-8'), 'utf-8').strip()))
                                 else:
                                     request['headers']['response'].append(\
-                                        u'{0}: {1}'.format(unicode(key.encode('utf-8')),
-                                                           unicode(value.encode('utf-8')).strip()))
+                                        '{0}: {1}'.format(str(key.encode('utf-8')),
+                                                           str(value.encode('utf-8')).strip()))
                             except Exception:
                                 logging.exception('Error processing response headers')
                 request['bytesOut'] = len("\r\n".join(str(request['headers']['request'])))
@@ -1327,15 +1327,15 @@ class DevToolsParser(object):
                             if index * usecs < doc * 1000:
                                 page_data['cpuTimesDoc'][name] += slice_time
                                 busy_doc += slice_time
-                    page_data['cpuTimes'][u'Idle'] = max(end - busy, 0)
-                    page_data['cpuTimesDoc'][u'Idle'] = max(doc - busy_doc, 0)
+                    page_data['cpuTimes']['Idle'] = max(end - busy, 0)
+                    page_data['cpuTimesDoc']['Idle'] = max(doc - busy_doc, 0)
                     # round everything to the closest int
                     for category in ['cpuTimes', 'cpuTimesDoc']:
                         for name in page_data[category]:
                             page_data[category][name] = int(round(page_data[category][name]))
                     # Create top-level cpu entries as well
                     for name in page_data['cpuTimes']:
-                        entry = u'cpu.{0}'.format(name)
+                        entry = 'cpu.{0}'.format(name)
                         page_data[entry] = page_data['cpuTimes'][name]
                     pass
         except Exception:

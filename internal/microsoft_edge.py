@@ -16,12 +16,12 @@ import sys
 import time
 if (sys.version_info >= (3, 0)):
     from time import monotonic
-    unicode = str
+    str = str
     from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'wt'
 else:
     from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
+    from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'w'
 try:
     import ujson as json
@@ -84,17 +84,17 @@ class Edge(DesktopBrowser):
         if not os.path.isdir(self.bodies_path):
             os.makedirs(self.bodies_path)
         try:
-            import _winreg # pylint: disable=import-error
-            registry_key = _winreg.CreateKeyEx(_winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, _winreg.KEY_READ | _winreg.KEY_WRITE)
-            self.edge_registry_key_value = _winreg.QueryValueEx(registry_key, "ClearBrowsingHistoryOnExit")[0]
+            import winreg # pylint: disable=import-error
+            registry_key = winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, winreg.KEY_READ | winreg.KEY_WRITE)
+            self.edge_registry_key_value = winreg.QueryValueEx(registry_key, "ClearBrowsingHistoryOnExit")[0]
             if not task['cached']:
                 self.clear_cache()
             if task['cached'] or job['fvonly']:
-                _winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, _winreg.REG_DWORD, 1)
-                _winreg.CloseKey(registry_key)
+                winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, winreg.REG_DWORD, 1)
+                winreg.CloseKey(registry_key)
             else:
-                _winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, _winreg.REG_DWORD, 0)
-                _winreg.CloseKey(registry_key)
+                winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, winreg.REG_DWORD, 0)
+                winreg.CloseKey(registry_key)
         except Exception as err:
             logging.exception("Error clearing cache: %s", str(err))
         DesktopBrowser.prepare(self, job, task)
@@ -216,10 +216,10 @@ class Edge(DesktopBrowser):
                 except Exception:
                     pass
         try:
-            import _winreg # pylint: disable=import-error
-            registry_key = _winreg.CreateKeyEx(_winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, _winreg.KEY_WRITE)
-            _winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, _winreg.REG_DWORD, self.edge_registry_key_value)
-            _winreg.CloseKey(registry_key)        
+            import winreg # pylint: disable=import-error
+            registry_key = winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, winreg.KEY_WRITE)
+            winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, winreg.REG_DWORD, self.edge_registry_key_value)
+            winreg.CloseKey(registry_key)        
         except Exception as err:
             logging.exception("Error resetting Edge cache settings: %s", str(err)) 
         self.kill()
@@ -466,7 +466,7 @@ class Edge(DesktopBrowser):
                 self.page['start'] = message['ts']
             if 'data' in message and 'AddressList' in message['data']:
                 self.dns[event_id]['addresses'] = list(
-                    filter(None, message['data']['AddressList'].split(';')))
+                    [_f for _f in message['data']['AddressList'].split(';') if _f])
         if message['Event'] == 'Wininet_Getaddrinfo/Start' and event_id in self.dns:
             if 'start' not in self.page:
                 self.page['start'] = message['ts']
@@ -711,7 +711,7 @@ class Edge(DesktopBrowser):
             bodies = None
             for name in self.job['customMetrics']:
                 logging.debug("Collecting custom metric %s", name)
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)

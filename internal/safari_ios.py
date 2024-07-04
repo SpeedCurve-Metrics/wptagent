@@ -19,11 +19,11 @@ import zipfile
 if (sys.version_info >= (3, 0)):
     from time import monotonic
     from urllib.parse import urlsplit # pylint: disable=import-error
-    unicode = str
+    str = str
     GZIP_TEXT = 'wt'
 else:
     from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
+    from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'w'
 try:
     import ujson as json
@@ -358,7 +358,7 @@ class iWptBrowser(BaseBrowser):
             bodies = None
             for name in self.job['customMetrics']:
                 logging.debug("Collecting custom metric %s", name)
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)
@@ -1353,11 +1353,11 @@ class iWptBrowser(BaseBrowser):
                 if 'request_headers' in r:
                     for name in r['request_headers']:
                         for value in r['request_headers'][name].splitlines():
-                            request['headers']['request'].append(u'{0}: {1}'.format(name, value))
+                            request['headers']['request'].append('{0}: {1}'.format(name, value))
                 if 'response_headers' in r:
                     for name in r['response_headers']:
                         for value in r['response_headers'][name].splitlines():
-                            request['headers']['response'].append(u'{0}: {1}'.format(name, value))
+                            request['headers']['response'].append('{0}: {1}'.format(name, value))
                     value = self.get_header_value(r['response_headers'], 'Expires')
                     if value:
                         request['expires'] = value

@@ -17,12 +17,12 @@ import sys
 import time
 if (sys.version_info >= (3, 0)):
     from time import monotonic
-    unicode = str
+    str = str
     from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'wt'
 else:
     from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
+    from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'w'
 try:
     import ujson as json
@@ -466,7 +466,7 @@ class Firefox(DesktopBrowser):
             bodies = None
             for name in self.job['customMetrics']:
                 logging.debug("Collecting custom metric %s", name)
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)

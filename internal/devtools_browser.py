@@ -18,11 +18,11 @@ import time
 if (sys.version_info >= (3, 0)):
     from time import monotonic
     from urllib.parse import urlsplit # pylint: disable=import-error
-    unicode = str
+    str = str
     GZIP_TEXT = 'wt'
 else:
     from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
+    from urllib.parse import urlsplit # pylint: disable=import-error
     GZIP_TEXT = 'w'
 try:
     import ujson as json
@@ -346,7 +346,7 @@ class DevtoolsBrowser(object):
                 entry = data[key]
                 if isinstance(entry, dict) or isinstance(entry, list):
                     self.strip_non_text(entry)
-                elif isinstance(entry, str) or isinstance(entry, unicode):
+                elif isinstance(entry, str) or isinstance(entry, str):
                     try:
                         if (sys.version_info >= (3, 0)):
                             entry.encode('utf-8').decode('utf-8')
@@ -364,7 +364,7 @@ class DevtoolsBrowser(object):
                 entry = data[key]
                 if isinstance(entry, dict) or isinstance(entry, list):
                     self.strip_non_text(entry)
-                elif isinstance(entry, str) or isinstance(entry, unicode):
+                elif isinstance(entry, str) or isinstance(entry, str):
                     try:
                         if (sys.version_info >= (3, 0)):
                             entry.encode('utf-8').decode('utf-8')
@@ -410,7 +410,7 @@ class DevtoolsBrowser(object):
             requests = None
             bodies = None
             for name in self.job['customMetrics']:
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)
@@ -579,7 +579,7 @@ class DevtoolsBrowser(object):
         proc = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
         for line in iter(proc.stderr.readline, b''):
             try:
-                line = unicode(line,errors='ignore')
+                line = str(line,errors='ignore')
                 logging.debug(line.rstrip())
                 self.task['lighthouse_log'] += line
             except Exception:

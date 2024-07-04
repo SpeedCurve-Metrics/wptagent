@@ -281,9 +281,9 @@ class WPTAgent(object):
             pass
         if not ret:
             if (sys.version_info >= (3, 0)):
-                print("Missing {0} module. Please run 'pip3 install {1}'".format(module, module_name))
+                print(("Missing {0} module. Please run 'pip3 install {1}'".format(module, module_name)))
             else:
-                print("Missing {0} module. Please run 'pip install {1}'".format(module, module_name))
+                print(("Missing {0} module. Please run 'pip install {1}'".format(module, module_name)))
         return ret
 
     def startup(self, detected_browsers):
@@ -472,8 +472,8 @@ def parse_ini(ini):
     if os.path.isfile(ini):
         parser = None
         try:
-            import ConfigParser
-            parser = ConfigParser.SafeConfigParser()
+            import configparser
+            parser = configparser.SafeConfigParser()
         except BaseException:
             import configparser
             parser = configparser.ConfigParser()
@@ -751,7 +751,7 @@ def main():
     # Video capture/display settings
     parser.add_argument('--xvfb', action='store_true', default=False,
                         help="Use an xvfb virtual display (Linux only).")
-    parser.add_argument('--fps', type=int, choices=range(1, 61), default=10,
+    parser.add_argument('--fps', type=int, choices=list(range(1, 61)), default=10,
                         help='Video capture frame rate (defaults to 10). '
                              'Valid range is 1-60 (Linux only).')
 

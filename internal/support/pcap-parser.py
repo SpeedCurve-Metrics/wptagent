@@ -78,11 +78,11 @@ class Pcap():
   def Print(self):
     global options
     if options.json:
-      print(json.dumps(self.bytes, indent=2))
+      print((json.dumps(self.bytes, indent=2)))
     else:
-      print("Bytes Out: {0:d}".format(self.bytes['out']))
-      print("Bytes In:  {0:d}".format(self.bytes['in']))
-      print("Duplicate Bytes In:  {0:d}".format(self.bytes['in_dup']))
+      print(("Bytes Out: {0:d}".format(self.bytes['out'])))
+      print(("Bytes In:  {0:d}".format(self.bytes['in'])))
+      print(("Duplicate Bytes In:  {0:d}".format(self.bytes['in_dup'])))
 
 
   def Process(self, pcap):

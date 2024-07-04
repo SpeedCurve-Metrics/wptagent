@@ -9,7 +9,7 @@ import re
 import sys
 
 if (sys.version_info >= (3, 0)):
-    unicode = str
+    str = str
 try:
     import ujson as json
 except BaseException:
@@ -86,7 +86,7 @@ class FirefoxWebDriver(Firefox):
                 script += 'Services.prefs.'
                 if isinstance(value, bool):
                     script += 'setBoolPref'
-                elif isinstance(value, (str, unicode)):
+                elif isinstance(value, str):
                     script += 'setStringPref'
                 else:
                     script += 'setIntPref'

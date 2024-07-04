@@ -24,7 +24,7 @@ if (sys.version_info >= (3, 0)):
     GZIP_READ_TEXT = 'rt'
 else:
     from monotonic import monotonic
-    from urllib import quote_plus # pylint: disable=import-error,no-name-in-module
+    from urllib.parse import quote_plus # pylint: disable=import-error,no-name-in-module
     GZIP_READ_TEXT = 'r'
 try:
     import ujson as json
@@ -417,7 +417,7 @@ class WebPageTest(object):
             if 'collectversion' in self.options and \
                     self.options.collectversion:
                 versions = []
-                for name in browsers.keys():
+                for name in list(browsers.keys()):
                     if 'version' in browsers[name]:
                         versions.append('{0}:{1}'.format(name, \
                                 browsers[name]['version']))
