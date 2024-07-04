@@ -79,8 +79,8 @@ def urlmatch(match_pattern, url, **kwargs):
     """
 
     if isinstance(match_pattern, str):
-        match_pattern = map(str.strip, match_pattern.split(','))
+        match_pattern = list(map(str.strip, match_pattern.split(',')))
 
-    regex = "({})".format("|".join(map(lambda x: parse_match_pattern(x, **kwargs), match_pattern)))
+    regex = "({})".format("|".join([parse_match_pattern(x, **kwargs) for x in match_pattern]))
 
     return bool(regex and re.search(regex, url))
