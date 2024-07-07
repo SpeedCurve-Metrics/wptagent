@@ -86,29 +86,15 @@ RUN sudo apt-get clean && \
 RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
     npm install -g lighthouse@${LIGHTHOUSE_VERSION}'
 
-# Install other utilities
-RUN pip3 install --break-system-packages --no-cache-dir \
-    dnspython \
-    monotonic \
-    pillow \
-    psutil \
-    requests \
-    tornado \
-    'wsaccel==0.6.3' \
-    xvfbwrapper \
-    'brotli==1.0.9' \
-    'fonttools>=3.44.0,<4.0.0' \
-    'mozrunner==7.4.0' \
-    'mozfile==2.1.0' \
-    marionette_driver \
-    selenium \
-    future
+# Install Python dependencies
+COPY ./requirements.txt /wptagent/requirements.txt
+RUN python3 -m pip install --break-system-packages --upgrade --user pip && \
+    python3 -m pip install --break-system-packages --user -r /wptagent/requirements.txt
 
 COPY ./wptagent.py /wptagent/wptagent.py
 COPY ./internal /wptagent/internal
 COPY ./ws4py /wptagent/ws4py
 COPY ./urlmatch /wptagent/urlmatch
-
 COPY ./docker/linux-headless/entrypoint.sh /wptagent/entrypoint.sh
 
 WORKDIR /wptagent
