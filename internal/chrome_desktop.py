@@ -46,6 +46,7 @@ else:
 
 CHROME_COMMAND_LINE_OPTIONS = [
     '--allow-running-insecure-content',
+    '--ash-no-nudges',
     '--enable-automation',
     '--disable-background-networking',
     '--disable-backgrounding-occluded-windows',
@@ -99,6 +100,7 @@ DISABLE_CHROME_FEATURES = [
     'MediaRouter',
     'OfflinePagesPrefetching',
     'OptimizationHints',
+    'SidePanelPinning',
     'Translate'
 ]
 
