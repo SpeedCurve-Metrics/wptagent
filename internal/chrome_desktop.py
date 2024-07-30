@@ -63,6 +63,7 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--disable-notifications',
     '--disable-prompt-on-repost',
     '--disable-renderer-backgrounding',
+    '--disable-search-engine-choice-screen',
     '--disable-site-isolation-trials',
     '--disable-sync',
     '--load-media-router-component-extension=0',
@@ -72,7 +73,8 @@ CHROME_COMMAND_LINE_OPTIONS = [
     '--new-window',
     '--no-default-browser-check',
     '--no-first-run',
-    '--password-store=basic'
+    '--password-store=basic',
+    '--propagate-iph-for-testing'
 ]
 
 HOST_RULES = [

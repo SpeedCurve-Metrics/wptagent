@@ -190,6 +190,9 @@ class DevtoolsBrowser(object):
         task['page_data']['debug']['uptime'] = time.time() - psutil.boot_time()
         task['page_data']['debug']['cpuFreq'] = psutil.cpu_freq(percpu=True)
 
+        # Save count of total navigations (not just those we're recording)
+        task['page_data']['debug']['rawNavigationCount'] = task['naive_navigation_count']
+
         if self.devtools is not None:
             self.devtools.start_recording()
 
