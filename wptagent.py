@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2019 WebPageTest LLC.
 # Copyright 2017 Google Inc.
 # Use of this source code is governed by the Apache 2.0 license that can be
@@ -16,10 +16,6 @@ import subprocess
 import sys
 import time
 import traceback
-if (sys.version_info >= (3, 0)):
-    GZIP_TEXT = 'wt'
-else:
-    GZIP_TEXT = 'w'
 
 
 class WPTAgent(object):
@@ -73,10 +69,7 @@ class WPTAgent(object):
 
     def run_testing(self):
         """Main testing flow"""
-        if (sys.version_info >= (3, 0)):
-            from time import monotonic
-        else:
-            from monotonic import monotonic
+        from time import monotonic
         start_time = monotonic()
         browser = None
         exit_file = os.path.join(self.root_path, 'exit')
@@ -185,7 +178,7 @@ class WPTAgent(object):
                     if self.task['lighthouse_log']:
                         try:
                             log_file = os.path.join(self.task['dir'], 'lighthouse.log.gz')
-                            with gzip.open(log_file, GZIP_TEXT, 7) as f_out:
+                            with gzip.open(log_file, 'wt', 7) as f_out:
                                 f_out.write(self.task['lighthouse_log'])
                         except Exception:
                             logging.exception('Error compressing lighthouse log')
@@ -239,10 +232,7 @@ class WPTAgent(object):
 
     def wait_for_idle(self, timeout=30):
         """Wait for the system to go idle for at least 2 seconds"""
-        if (sys.version_info >= (3, 0)):
-            from time import monotonic
-        else:
-            from monotonic import monotonic
+        from time import monotonic
         import psutil
         logging.debug("Waiting for Idle...")
         cpu_count = psutil.cpu_count()
@@ -280,10 +270,7 @@ class WPTAgent(object):
         except ImportError:
             pass
         if not ret:
-            if (sys.version_info >= (3, 0)):
-                print(("Missing {0} module. Please run 'pip3 install {1}'".format(module, module_name)))
-            else:
-                print(("Missing {0} module. Please run 'pip install {1}'".format(module, module_name)))
+            print(("Missing {0} module. Please run 'pip3 install {1}'".format(module, module_name)))
         return ret
 
     def startup(self, detected_browsers):
@@ -298,22 +285,13 @@ class WPTAgent(object):
                 self.options.alive = os.path.join(os.path.dirname(__file__), 'wptagent.alive')
         self.alive()
         ret = self.requires('dns', 'dnspython') and ret
-        ret = self.requires('monotonic') and ret
         ret = self.requires('PIL', 'pillow') and ret
-        ret = self.requires('psutil') and ret
-        ret = self.requires('requests') and ret
         if not self.options.android and not self.options.iOS:
             ret = self.requires('tornado') and ret
         # Windows-specific imports
         if platform.system() == "Windows":
             ret = self.requires('win32api', 'pywin32') and ret
 
-        if self.options.webdriver and 'Firefox' in detected_browsers:
-            ret = self.requires('selenium')
-
-        # Optional imports
-        self.requires('brotli')
-        self.requires('fontTools', 'fonttools')
 
         # Try patching ws4py with a faster lib
         try:
@@ -384,6 +362,7 @@ class WPTAgent(object):
             self.capture_display = 'desktop'
 
         # Fix Lighthouse install permissions
+        # TODO (AD) Review
         if platform.system() != "Windows" and sys.version_info < (3, 0):
             from internal.os_util import run_elevated
             run_elevated('chmod', '-R 777 ~/.config/configstore/')
@@ -392,17 +371,6 @@ class WPTAgent(object):
                 run_elevated('chown', '-R {0}:{0} ~/.config'.format(getpass.getuser()))
             except Exception:
                 pass
-
-        # Check for Node 10+
-        if self.get_node_version() < 10.0:
-            if platform.system() == "Linux":
-                # This only works on debian-based systems
-                logging.debug('Updating Node.js to 12.x')
-                subprocess.call('curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -',
-                                shell=True)
-                subprocess.call(['sudo', 'apt-get', 'install', '-y', 'nodejs'])
-            if self.get_node_version() < 10.0:
-                logging.warning("Node.js 10 or newer is required for Lighthouse testing")
 
         # Check the iOS install
         if self.ios is not None:
@@ -427,21 +395,6 @@ class WPTAgent(object):
             self.update_windows_certificates()
 
         return ret
-
-    def get_node_version(self):
-        """Get the installed version of Node.js"""
-        version = 0
-        try:
-            if (sys.version_info >= (3, 0)):
-                stdout = subprocess.check_output(['node', '--version'], encoding='UTF-8')
-            else:
-                stdout = subprocess.check_output(['node', '--version'])
-            matches = re.match(r'^v(\d+\.\d+)', stdout)
-            if matches:
-                version = float(matches.group(1))
-        except Exception:
-            pass
-        return version
 
     def update_windows_certificates(self):
         """ Update the root Windows certificates"""
@@ -650,6 +603,7 @@ def find_browsers(options):
                 browsers['Chrome Canary'] = {'exe': canary_path}
             if 'Canary' not in browsers:
                 browsers['Canary'] = {'exe': canary_path}
+                
         # Chromium
         chromium_path = '/usr/lib/chromium-browser/chromium-browser'
         if 'Chromium' not in browsers and os.path.isfile(chromium_path):
@@ -661,11 +615,15 @@ def find_browsers(options):
             browsers['Chromium'] = {'exe': chromium_path}
         if 'Chrome' not in browsers and os.path.isfile(chromium_path):
             browsers['Chrome'] = {'exe': chromium_path}
+
         # Firefox browsers
         firefox_path = '/usr/lib/firefox/firefox'
         if 'Firefox' not in browsers and os.path.isfile(firefox_path):
             browsers['Firefox'] = {'exe': firefox_path, 'type': 'Firefox'}
         firefox_path = '/usr/bin/firefox'
+        if 'Firefox' not in browsers and os.path.isfile(firefox_path):
+            browsers['Firefox'] = {'exe': firefox_path, 'type': 'Firefox'}
+        firefox_path = '/usr/local/bin/firefox'
         if 'Firefox' not in browsers and os.path.isfile(firefox_path):
             browsers['Firefox'] = {'exe': firefox_path, 'type': 'Firefox'}
         firefox_path = '/usr/lib/firefox-esr/firefox-esr'
@@ -832,6 +790,7 @@ def main():
     options, _ = parser.parse_known_args()
 
     # Make sure we are running python 2.7.11 or newer (required for Windows 8.1)
+    # TODO (AD) Review
     if sys.version_info[0] < 3:
         if platform.system() == "Windows":
             if sys.version_info[0] != 2 or \
@@ -853,8 +812,7 @@ def main():
         exit(1)
 
     # Force WebDriver for Python 3
-    if (sys.version_info >= (3, 0)):
-        options.webdriver = True
+    options.webdriver = True
 
     # Set up logging
     log_level = logging.CRITICAL

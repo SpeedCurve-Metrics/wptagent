@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -21,20 +21,31 @@ import logging
 import os
 import re
 import sys
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from monotonic import monotonic
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+from time import monotonic
+from urllib.parse import urlsplit # pylint: disable=import-error
+
 try:
     import ujson as json
 except BaseException:
     import json
+
+
+# Constants copied from https://searchfox.org/mozilla-central/source/devtools/shared/network-observer/NetworkObserver.sys.mjs
+REQUEST_HEADER = '5001'
+REQUEST_BODY_SENT = '5002'
+RESPONSE_START = '5003'
+RESPONSE_HEADER = '5004'
+RESPONSE_COMPLETE = '5005'
+TRANSACTION_CLOSE = '5006'
+STATUS_RESOLVING = '4b0003'
+STATUS_RESOLVED = '4b000b'
+STATUS_CONNECTING_TO = '4b0007'
+STATUS_CONNECTED_TO = '4b0004'
+STATUS_SENDING_TO = '4b0005'
+STATUS_WAITING_FOR = '4b000a'
+STATUS_RECEIVING_FROM = '4b0006'
+STATUS_TLS_STARTING = '4b000c'
+STATUS_TLS_ENDING = '4b000d'
 
 class FirefoxLogParser(object):
     """Handle parsing of firefox logs"""
@@ -132,9 +143,9 @@ class FirefoxLogParser(object):
         _, ext = os.path.splitext(path)
         line_count = 0
         if ext.lower() == '.gz':
-            f_in = gzip.open(path, GZIP_READ_TEXT)
+            f_in = gzip.open(path, 'rt')
         else:
-            f_in = open(path, 'r')
+            f_in = open(path, 'r') # TODO (AD) Should this be rt?
         for line in f_in:
             line_count += 1
             line = line.rstrip("\r\n")
@@ -286,16 +297,16 @@ class FirefoxLogParser(object):
                 socket = self.http['current_socket']
                 self.http['connections'][connection] = {'socket': socket}
             del self.http['current_socket']
-        elif msg['message'].startswith('nsHttpConnection::SetupSSL '):
-            match = re.search(r'^nsHttpConnection::SetupSSL (?P<connection>[\w\d]+)',
+        elif msg['message'].startswith('TlsHandshaker::SetupSSL '):
+            match = re.search(r'^TlsHandshaker::SetupSSL (?P<connection>[\w\d]+)',
                               msg['message'])
             if match:
                 connection = match.groupdict().get('connection')
                 if connection in self.http['connections']:
                     if 'ssl_start' not in self.http['connections'][connection]:
                         self.http['connections'][connection]['ssl_start'] = msg['timestamp']
-        elif msg['message'].startswith('nsHttpConnection::EnsureNPNComplete '):
-            match = re.search(r'^nsHttpConnection::EnsureNPNComplete (?P<connection>[\w\d]+)',
+        elif msg['message'].startswith('TlsHandshaker::HandshakeDone '):
+            match = re.search(r'^TlsHandshaker::HandshakeDone mOwner=(?P<connection>[\w\d]+)',
                               msg['message'])
             if match:
                 connection = match.groupdict().get('connection')
@@ -312,9 +323,9 @@ class FirefoxLogParser(object):
                         'start' not in self.http['requests'][trans_id]:
                     self.http['requests'][trans_id]['start'] = msg['timestamp']
         elif msg['message'].startswith('nsHttpTransaction::OnSocketStatus ') and \
-                msg['message'].find(' status=804b0005 progress=') > -1:
+                msg['message'].find(' status=4b0005 progress=') > -1:
             match = re.search(r'^nsHttpTransaction::OnSocketStatus '\
-                              r'\[this=(?P<id>[\w\d]+) status=804b0005 progress=(?P<bytes>[\d+]+)',
+                              r'\[this=(?P<id>[\w\d]+) status=4b0005 progress=(?P<bytes>[\d+]+)',
                               msg['message'])
             if match:
                 trans_id = match.groupdict().get('id')
@@ -435,7 +446,7 @@ class FirefoxLogParser(object):
                 host = match.groupdict().get('host')
                 port = match.groupdict().get('port')
                 self.http['sockets'][socket] = {'host': host, 'port': port}
-        # nsSocketTransport::SendStatus [this=143f4000 status=804b0007]
+        # nsSocketTransport::SendStatus [this=143f4000 status=4b0007]
         elif msg['message'].startswith('nsSocketTransport::SendStatus '):
             match = re.search(r'^nsSocketTransport::SendStatus \['
                               r'this=(?P<socket>[\w\d]+) '
@@ -443,7 +454,7 @@ class FirefoxLogParser(object):
             if match:
                 socket = match.groupdict().get('socket')
                 status = match.groupdict().get('status')
-                if status == '804b0007':
+                if status == STATUS_CONNECTING_TO:
                     if socket not in self.http['sockets']:
                         self.http['sockets'][socket] = {}
                     if 'start' not in self.http['sockets'][socket]:
@@ -476,7 +487,7 @@ class FirefoxLogParser(object):
 def main():
     """ Main entry-point when running on the command-line"""
     import argparse
-    parser = argparse.ArgumentParser(description='Chrome trace parser.',
+    parser = argparse.ArgumentParser(description='Firefox trace parser.',
                                      prog='trace-parser')
     parser.add_argument('-v', '--verbose', action='count',
                         help="Increase verbosity (specify multiple times for more)" \

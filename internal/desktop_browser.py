@@ -16,12 +16,8 @@ import errno
 import sys
 import threading
 import time
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    GZIP_TEXT = 'wt'
-else:
-    from monotonic import monotonic
-    GZIP_TEXT = 'w'
+from time import monotonic
+
 try:
     import ujson as json
 except BaseException:
@@ -544,7 +540,7 @@ class DesktopBrowser(BaseBrowser):
         # record the CPU/Bandwidth/memory info
         if self.usage_queue is not None and not self.usage_queue.empty() and task is not None:
             file_path = os.path.join(task['dir'], task['prefix']) + '_progress.csv.gz'
-            gzfile = gzip.open(file_path, GZIP_TEXT, 7)
+            gzfile = gzip.open(file_path, 'wt', 7)
             if gzfile:
                 gzfile.write("Offset Time (ms),Bandwidth In (bps),CPU Utilization (%),Memory\n")
                 try:
@@ -666,7 +662,7 @@ class DesktopBrowser(BaseBrowser):
             path = os.path.join(task['dir'], task['prefix'] + '_page_data.json.gz')
             json_page_data = json.dumps(task['page_data'])
             logging.debug('Page Data: %s', json_page_data)
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json_page_data)
 
     def process_pcap(self):
@@ -680,10 +676,7 @@ class DesktopBrowser(BaseBrowser):
             cmd = [sys.executable, pcap_parser, '--json', '-i', pcap_file, '-d', slices_file]
             logging.debug(cmd)
             try:
-                if (sys.version_info >= (3, 0)):
-                    stdout = subprocess.check_output(cmd, encoding='UTF-8')
-                else:
-                    stdout = subprocess.check_output(cmd)
+                stdout = subprocess.check_output(cmd, encoding='UTF-8')
                 if stdout is not None:
                     result = json.loads(stdout)
                     if result:

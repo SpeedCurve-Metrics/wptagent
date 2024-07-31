@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -22,15 +22,7 @@ import os
 import re
 import sys
 import time
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    str = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urllib.parse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+from urllib.parse import urlparse # pylint: disable=import-error
 
 # try a fast json parser if it is installed
 try:
@@ -78,10 +70,10 @@ class Trace():
         try:
             _, ext = os.path.splitext(out_file)
             if ext.lower() == '.gz':
-                with gzip.open(out_file, GZIP_TEXT) as f:
+                with gzip.open(out_file, 'wt') as f:
                     json.dump(json_data, f)
             else:
-                with open(out_file, 'w') as f:
+                with open(out_file, 'w') as f: # TODO (AD) Should this be wt?
                     json.dump(json_data, f)
         except BaseException:
             logging.exception("Error writing to " + out_file)
@@ -149,9 +141,9 @@ class Trace():
         try:
             _, ext = os.path.splitext(trace)
             if ext.lower() == '.gz':
-                f = gzip.open(trace, GZIP_READ_TEXT)
+                f = gzip.open(trace, 'rt')
             else:
-                f = open(trace, 'r')
+                f = open(trace, 'r') # TODO (AD) Should this be rt?
             for line in f:
                 try:
                     trace_event = json.loads(line.strip("\r\n\t ,"))
@@ -178,9 +170,9 @@ class Trace():
         try:
             _, ext = os.path.splitext(timeline)
             if ext.lower() == '.gz':
-                f = gzip.open(timeline, GZIP_READ_TEXT)
+                f = gzip.open(timeline, 'rt')
             else:
-                f = open(timeline, 'r')
+                f = open(timeline, 'r') # TODO (AD) Should this be rt?
             events = json.load(f)
             if events:
                 # convert the old format timeline events into our internal

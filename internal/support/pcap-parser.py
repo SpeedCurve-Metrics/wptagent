@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -23,10 +23,6 @@ import os
 import struct
 import sys
 import time
-if (sys.version_info >= (3, 0)):
-    GZIP_TEXT = 'wt'
-else:
-    GZIP_TEXT = 'w'
 
 #Globals
 options = None
@@ -49,9 +45,9 @@ class Pcap():
   def SaveStats(self, out):
     _, ext = os.path.splitext(out)
     if ext.lower() == '.gz':
-      f = gzip.open(out, GZIP_TEXT)
+      f = gzip.open(out, 'wt')
     else:
-      f = open(out, 'w')
+      f = open(out, 'w') # TODO (AD) Should this be wt?
     try:
       result = {"bytes": self.bytes}
       json.dump(result, f)
@@ -64,9 +60,9 @@ class Pcap():
   def SaveDetails(self, out):
     _, ext = os.path.splitext(out)
     if ext.lower() == '.gz':
-      f = gzip.open(out, GZIP_TEXT)
+      f = gzip.open(out, 'wt')
     else:
-      f = open(out, 'w')
+      f = open(out, 'w') # (AD) Should this be wt?
     try:
       json.dump(self.slices, f)
       logging.info('Result details written to {0}'.format(out))

@@ -22,16 +22,7 @@ try:
 except BaseException:
     import json
 
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    str = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urllib.parse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
-
+from urllib.parse import urlparse # pylint: disable=import-error
 
 #
 # Where possible prefer Chrome switches over blocking URLs

@@ -10,43 +10,47 @@ LABEL author="support@speedcurve.com"
 ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update
-RUN apt-get install -y \
-    wget \
-    curl \
-    git \
-    python3 \
-    python3-pip \
-    python3-ujson \
-    python3-xlib \
-    xvfb \
-    imagemagick \
-    zlib1g-dev \
-    libjpeg-dev \
-    psmisc \
-    dbus-x11 \
-    sudo \
-    kmod \
-    ffmpeg \
-    net-tools \
-    tcpdump \
-    traceroute \
-    bind9utils \
-    libnss3-tools \
-    iproute2 \
-    software-properties-common \
-    nano
+# Keep update and install in same layer to avoid Docker cachine issues
+RUN apt-get update && \
+  apt-get install -y \
+  wget \
+  curl \
+  git \
+  python3 \
+  python3-pip \
+  python3-ujson \
+  python3-xlib \
+  xvfb \
+  imagemagick \
+  zlib1g-dev \
+  libjpeg-dev \
+  psmisc \
+  dbus-x11 \
+  sudo \
+  kmod \
+  ffmpeg \
+  net-tools \
+  tcpdump \
+  traceroute \
+  bind9utils \
+  libnss3-tools \
+  iproute2 \
+  software-properties-common \
+  nano
 
 # Add the ARGs here so that changing them doesn't invalidate the previous layers' cache
 ARG FIREFOX_STABLE_VERSION=127.0.2
 ARG LIGHTHOUSE_VERSION=12.1.0
-ARG NODEJS_VERSION=20
+ARG NODEJS_VERSION=20.x
 
 # Install Node.js with nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
-  export NVM_DIR="$HOME/.nvm" && \
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
-  nvm install $NODEJS_VERSION
+#RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
+#  export NVM_DIR="$HOME/.nvm" && \
+#  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
+#  nvm install $NODEJS_VERSION
+
+RUN  curl -fsSL https://deb.nodesource.com/setup_${NODEJS_VERSION} | sudo bash - && \
+    sudo apt-get install -y nodejs
 
 # Install browsers
 # Note: Google have started removing old Chrome versions, so we cannot specify a version here. We
@@ -83,8 +87,8 @@ RUN sudo apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
 # Install lighthouse
-RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
-    npm install -g lighthouse@${LIGHTHOUSE_VERSION}'
+# RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
+RUN npm install -g lighthouse@${LIGHTHOUSE_VERSION}
 
 # Install Python dependencies
 COPY ./requirements.txt /wptagent/requirements.txt

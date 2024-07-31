@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Process a Chrome Netlog into a set of requests for further processing by the agent
 
@@ -37,15 +37,7 @@ import re
 import sys
 import time
 
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    str = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urllib.parse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+from urllib.parse import urlparse # pylint: disable=import-error
 
 # try a fast json parser if it is installed
 try:
@@ -970,7 +962,7 @@ class NetLogParser():
         try:
             _, ext = os.path.splitext(out_file)
             if ext.lower() == '.gz':
-                with gzip.open(out_file, GZIP_TEXT) as f:
+                with gzip.open(out_file, 'wt') as f:
                     json.dump(json_data, f)
             else:
                 with open(out_file, 'w') as f:

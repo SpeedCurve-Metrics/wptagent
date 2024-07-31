@@ -1,0 +1,27 @@
+# Current status of Python 3 / Ubuntu 22.04 Post
+
+## 2024-07-18
+
+### TODO
+
+[] www.bbc.co.uk in Firefox
+[] tcpdump fails to launch
+[] test traceroute
+[] install LH outside NVM
+[] rejig Dockerfile to reduce layers and other cleanups to make it smaller (current release is 2GB, this build is 4GB)
+[] Install known versions of Browsers and LH
+[] Remove Selenium telemetry
+[] Add prefs to block FF access to captive portal and ??? (what was the other thing)
+[] Errors flushing DNS
+[] Prompts for password on startup in VM
+
+### Notes
+
+Chrome and Firefox tests execute and produce waterfalls but there are still errors in the logs
+
+Lightouse fails to execute – shell can't find it so assume it's a problem with it installed via NVM
+
+tcpdump (and presumably traceroute) fail to launch with a python error
+
+Simple pages work in Firefox but more complex ones fail e.g. www.bbc.co.uk
+

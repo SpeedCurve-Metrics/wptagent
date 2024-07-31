@@ -13,34 +13,20 @@ should hopefully work fine with other versions too.
 """
 import sys
 
-if sys.version_info >= (3, 0):
-    py3k = True
-    from urllib.parse import urlsplit
-    range = range
-    str = str
-    str = (bytes, str)
-    _ord = ord
+py3k = True
+from urllib.parse import urlsplit
+range = range
+str = str
+str = (bytes, str) # TODO (AD) Wut?
+_ord = ord
 
-    def get_connection(fileobj):
-        return fileobj.raw._sock
+def get_connection(fileobj):
+    return fileobj.raw._sock
 
-    def detach_connection(fileobj):
-        fileobj.detach()
+def detach_connection(fileobj):
+    fileobj.detach()
 
-    def ord(c):
-        if isinstance(c, int):
-            return c
-        return _ord(c)
-else:
-    py3k = False
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    range = xrange  # pylint: disable=undefined-variable
-    str = str
-    str = str
-    ord = ord
-
-    def get_connection(fileobj):
-        return fileobj._sock
-
-    def detach_connection(fileobj):
-        fileobj._sock = None
+def ord(c):
+    if isinstance(c, int):
+        return c
+    return _ord(c)

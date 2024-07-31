@@ -11,10 +11,7 @@ import subprocess
 import sys
 from threading import Timer
 import time
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-else:
-    from monotonic import monotonic
+from time import monotonic
 
 # cSpell:ignore vpndialogs, sysctl, iptables, ifconfig, dstaddr, clientidbase, nsecs
 
@@ -140,10 +137,7 @@ class Adb(object):
             self.simplert_path = None
             if self.options.simplert is not None and platform.system() == 'Linux':
                 running = False
-                if (sys.version_info >= (3, 0)):
-                    stdout = subprocess.check_output(['ps', 'ax'], encoding='UTF-8')
-                else:
-                    stdout = subprocess.check_output(['ps', 'ax'])
+                stdout = subprocess.check_output(['ps', 'ax'], encoding='UTF-8')
                 if stdout.find('simple-rt ') > -1:
                     running = True
                     logging.debug('simple-rt is already running')

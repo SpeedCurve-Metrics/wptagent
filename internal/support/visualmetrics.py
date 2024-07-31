@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright (c) 2014, Google Inc.
@@ -38,14 +38,7 @@ import platform
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
-if (sys.version_info >= (3, 0)):
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
 
 # Globals
 options = None
@@ -142,11 +135,10 @@ def extract_frames(video, directory, full_resolution, viewport):
         logging.debug(' '.join(command))
         proc = subprocess.Popen(command, stderr=subprocess.PIPE, universal_newlines=True)
         _, stderr = proc.communicate()
-        if (sys.version_info >= (3, 0)):
-            try:
-                stderr = stderr.decode('utf-8')
-            except Exception:
-                pass
+        try:
+            stderr = stderr.decode('utf-8')
+        except Exception:
+            pass
         lines = stderr.splitlines()
 
         pattern = re.compile(r'keep pts:[0-9]+ pts_time:(?P<timecode>[0-9\.]+)')
@@ -736,10 +728,7 @@ def crop_viewport(directory):
 def get_decimate_filter():
     decimate = None
     try:
-        if (sys.version_info >= (3, 0)):
-            filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT, encoding='UTF-8')
-        else:
-            filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT)
+        filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT, encoding='UTF-8')
         lines = filters.split("\n")
         match = re.compile(
             r'(?P<filter>[\w]*decimate).*V->V.*Remove near-duplicate frames')
@@ -797,11 +786,10 @@ def is_color_frame(file, color_file):
                                    image_magick['compare'])
                 compare = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
                 _, err = compare.communicate()
-                if (sys.version_info >= (3, 0)):
-                    try:
-                        err = err.decode('utf-8')
-                    except Exception:
-                        pass
+                try:
+                    err = err.decode('utf-8')
+                except Exception:
+                    pass
                 if re.match('^[0-9]+$', err):
                     different_pixels = int(err)
                     if different_pixels < 100:
@@ -837,11 +825,10 @@ def is_white_frame(file, white_file):
                            image_magick['convert'], white_file, file, crop, image_magick['compare'])
         compare = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
         _, err = compare.communicate()
-        if (sys.version_info >= (3, 0)):
-            try:
-                err = err.decode('utf-8')
-            except Exception:
-                pass
+        try:
+            err = err.decode('utf-8')
+        except Exception:
+            pass
         if re.match('^[0-9]+$', err):
             different_pixels = int(err)
             if different_pixels < 500:
@@ -887,11 +874,10 @@ def frames_match(image1, image2, fuzz_percent,
         command = command.replace('(', '\\(').replace(')', '\\)')
     compare = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
     _, err = compare.communicate()
-    if (sys.version_info >= (3, 0)):
-        try:
-            err = err.decode('utf-8')
-        except Exception:
-            pass
+    try:
+        err = err.decode('utf-8')
+    except Exception:
+        pass
     if re.match('^[0-9]+$', err):
         different_pixels = int(err)
         if different_pixels <= max_differences:
@@ -965,9 +951,9 @@ def get_timeline_offset(timeline_file):
     try:
         file_name, ext = os.path.splitext(timeline_file)
         if ext.lower() == '.gz':
-            f = gzip.open(timeline_file, GZIP_READ_TEXT)
+            f = gzip.open(timeline_file, 'rt')
         else:
-            f = open(timeline_file, 'r')
+            f = open(timeline_file, 'r') # TODO (AD) Should be 'rt'?
         timeline = json.load(f)
         f.close()
         last_paint = None
@@ -1099,7 +1085,7 @@ def calculate_histograms(directory, histograms_file, force):
                                  'histogram': histogram})
                 if os.path.isfile(histograms_file):
                     os.remove(histograms_file)
-                f = gzip.open(histograms_file, GZIP_TEXT)
+                f = gzip.open(histograms_file, 'wt')
                 json.dump(histograms, f)
                 f.close()
             else:
@@ -1362,9 +1348,9 @@ def calculate_visual_metrics(histograms_file, start, end, perceptual, dirs, prog
         if progress and progress_file is not None:
             file_name, ext = os.path.splitext(progress_file)
             if ext.lower() == '.gz':
-                f = gzip.open(progress_file, GZIP_TEXT, 7)
+                f = gzip.open(progress_file, 'wt', 7)
             else:
-                f = open(progress_file, 'w')
+                f = open(progress_file, 'w') # TODO (AD) Should be 'wt'?
             json.dump(progress, f)
             f.close()
         if len(histograms) > 1:
@@ -1382,7 +1368,7 @@ def calculate_visual_metrics(histograms_file, start, end, perceptual, dirs, prog
             if hero_elements_file is not None and os.path.isfile(hero_elements_file):
                 logging.debug('Calculating hero element times')
                 hero_data = None
-                with gzip.open(hero_elements_file, GZIP_READ_TEXT) as hero_f_in:
+                with gzip.open(hero_elements_file, 'rt') as hero_f_in:
                     try:
                         hero_data = json.load(hero_f_in)
                     except Exception:
@@ -1403,10 +1389,10 @@ def calculate_visual_metrics(histograms_file, start, end, perceptual, dirs, prog
                     hero_data['timings'] = hero_timings
                     metrics += hero_timings
 
-                    with gzip.open(hero_elements_file, GZIP_TEXT, 7) as hero_f_out:
+                    with gzip.open(hero_elements_file, 'wt', 7) as hero_f_out:
                         json.dump(hero_data, hero_f_out)
             else:
-                logging.warn('Hero elements file is not valid: ' + str(hero_elements_file))
+                logging.warning('Hero elements file is not valid: ' + str(hero_elements_file))
         else:
             metrics = [
                 {'name': 'First Visual Change',
@@ -1681,10 +1667,7 @@ def check_config():
 def check_process(command, output):
     ok = False
     try:
-        if (sys.version_info >= (3, 0)):
-            out = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, encoding='UTF-8')
-        else:
-            out = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        out = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, encoding='UTF-8')
         if out.find(output) > -1:
             ok = True
     except BaseException:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -27,15 +27,8 @@ try:
     HAS_FUTURE = True
 except BaseException:
     pass
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    str = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+
+from urllib.parse import urlsplit # pylint: disable=import-error
 
 # try a fast json parser if it is installed
 try:
@@ -120,10 +113,10 @@ class DevToolsParser(object):
                 try:
                     _, ext = os.path.splitext(self.out_file)
                     if ext.lower() == '.gz':
-                        with gzip.open(self.out_file, GZIP_TEXT) as f_out:
+                        with gzip.open(self.out_file, 'wt') as f_out:
                             json.dump(self.result, f_out)
                     else:
-                        with open(self.out_file, 'w') as f_out:
+                        with open(self.out_file, 'w') as f_out: # TODO (AD) should this be wt?
                             json.dump(self.result, f_out)
                 except Exception:
                     logging.exception("Error writing to " + self.out_file)
@@ -135,9 +128,9 @@ class DevToolsParser(object):
         page_data = {'endTime': 0}
         _, ext = os.path.splitext(self.devtools_file)
         if ext.lower() == '.gz':
-            f_in = gzip.open(self.devtools_file, GZIP_READ_TEXT)
+            f_in = gzip.open(self.devtools_file, 'rt')
         else:
-            f_in = open(self.devtools_file, 'r')
+            f_in = open(self.devtools_file, 'r') # TODO (AD) should this be rt?
         raw_events = json.load(f_in)
         f_in.close()
         if raw_events is not None and len(raw_events):
@@ -781,9 +774,9 @@ class DevToolsParser(object):
         if self.netlog_requests_file is not None and os.path.isfile(self.netlog_requests_file):
             _, ext = os.path.splitext(self.netlog_requests_file)
             if ext.lower() == '.gz':
-                f_in = gzip.open(self.netlog_requests_file, GZIP_READ_TEXT)
+                f_in = gzip.open(self.netlog_requests_file, 'rt')
             else:
-                f_in = open(self.netlog_requests_file, 'r')
+                f_in = open(self.netlog_requests_file, 'r') # TODO (AD) Should this be rt?
             netlog = json.load(f_in)
             f_in.close()
             keep_requests = []
@@ -1079,9 +1072,9 @@ class DevToolsParser(object):
         if self.user_timing_file is not None and os.path.isfile(self.user_timing_file):
             _, ext = os.path.splitext(self.user_timing_file)
             if ext.lower() == '.gz':
-                f_in = gzip.open(self.user_timing_file, GZIP_READ_TEXT)
+                f_in = gzip.open(self.user_timing_file, 'rt')
             else:
-                f_in = open(self.user_timing_file, 'r')
+                f_in = open(self.user_timing_file, 'r') # TODO (AD) Should this be rt?
             user_timing_events = json.load(f_in)
             f_in.close()
             if user_timing_events:
@@ -1141,9 +1134,9 @@ class DevToolsParser(object):
         if self.optimization is not None and os.path.isfile(self.optimization):
             _, ext = os.path.splitext(self.optimization)
             if ext.lower() == '.gz':
-                f_in = gzip.open(self.optimization, GZIP_READ_TEXT)
+                f_in = gzip.open(self.optimization, 'rt')
             else:
-                f_in = open(self.optimization, 'r')
+                f_in = open(self.optimization, 'r') # TODO (AD) Should this be rt?
             optimization_results = json.load(f_in)
             f_in.close()
             page_data['score_cache'] = -1
@@ -1253,9 +1246,9 @@ class DevToolsParser(object):
             if self.coverage is not None and os.path.isfile(self.coverage):
                 _, ext = os.path.splitext(self.coverage)
                 if ext.lower() == '.gz':
-                    f_in = gzip.open(self.coverage, GZIP_READ_TEXT)
+                    f_in = gzip.open(self.coverage, 'rt')
                 else:
-                    f_in = open(self.coverage, 'r')
+                    f_in = open(self.coverage, 'r') # TODO (AD) Should this be rt?
                 coverage = json.load(f_in)
                 f_in.close()
                 if coverage:
@@ -1302,9 +1295,9 @@ class DevToolsParser(object):
             if end > 0 and self.cpu_times is not None and os.path.isfile(self.cpu_times):
                 _, ext = os.path.splitext(self.cpu_times)
                 if ext.lower() == '.gz':
-                    f_in = gzip.open(self.cpu_times, GZIP_READ_TEXT)
+                    f_in = gzip.open(self.cpu_times, 'rt')
                 else:
-                    f_in = open(self.cpu_times, 'r')
+                    f_in = open(self.cpu_times, 'r') # TODO (AD) Should this be rt?
                 cpu = json.load(f_in)
                 f_in.close()
                 if cpu and 'main_thread' in cpu and 'slices' in cpu and \
@@ -1348,9 +1341,9 @@ class DevToolsParser(object):
             if self.v8_stats is not None and os.path.isfile(self.v8_stats):
                 _, ext = os.path.splitext(self.v8_stats)
                 if ext.lower() == '.gz':
-                    f_in = gzip.open(self.v8_stats, GZIP_READ_TEXT)
+                    f_in = gzip.open(self.v8_stats, 'rt')
                 else:
-                    f_in = open(self.v8_stats, 'r')
+                    f_in = open(self.v8_stats, 'r') # TODO (AD) Should this be rt?
                 stats = json.load(f_in)
                 f_in.close()
                 if stats and 'main_threads' in stats and 'threads' in stats:

@@ -18,14 +18,9 @@ import threading
 import time
 import zipfile
 import psutil
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    from urllib.parse import quote_plus # pylint: disable=import-error
-    GZIP_READ_TEXT = 'rt'
-else:
-    from monotonic import monotonic
-    from urllib.parse import quote_plus # pylint: disable=import-error,no-name-in-module
-    GZIP_READ_TEXT = 'r'
+from time import monotonic
+from urllib.parse import quote_plus # pylint: disable=import-error
+
 try:
     import ujson as json
 except BaseException:
@@ -130,10 +125,7 @@ class WebPageTest(object):
         self.version = '23.09'
         try:
             directory = os.path.abspath(os.path.dirname(__file__))
-            if (sys.version_info >= (3, 0)):
-                out = subprocess.check_output('git log -1 --format=%cd --date=raw', shell=True, cwd=directory, encoding='UTF-8')
-            else:
-                out = subprocess.check_output('git log -1 --format=%cd --date=raw', shell=True, cwd=directory)
+            out = subprocess.check_output('git log -1 --format=%cd --date=raw', shell=True, cwd=directory, encoding='UTF-8')
             if out is not None:
                 matches = re.search(r'^(\d+)', out)
                 if matches:
@@ -989,7 +981,7 @@ class WebPageTest(object):
             path = os.path.join(task['dir'], 'bodies')
             requests = []
             devtools_file = os.path.join(task['dir'], task['prefix'] + '_devtools_requests.json.gz')
-            with gzip.open(devtools_file, GZIP_READ_TEXT) as f_in:
+            with gzip.open(devtools_file, 'rt') as f_in:
                 requests = json.load(f_in)
             count = 0
             bodies_zip = path_base + '_bodies.zip'
@@ -1180,7 +1172,7 @@ class WebPageTest(object):
                             needs_zip.append({'path': filepath, 'name': filename})
                 # Zip the remaining files
                 if len(needs_zip):
-                    zip_path = os.path.join(task['dir'], "result.zip")
+                    zip_path = os.path.join(task['dir'], 'result.zip')
                     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zip_file:
                         for zipitem in needs_zip:
                             logging.debug('Storing %s (%d bytes)', zipitem['name'],
