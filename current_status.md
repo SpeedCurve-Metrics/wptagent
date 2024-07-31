@@ -4,10 +4,8 @@
 
 ### TODO
 
-[] www.bbc.co.uk in Firefox
-[] tcpdump fails to launch
+[] tcpdump fails to launch on Docker (works in VM)
 [] test traceroute
-[] install LH outside NVM
 [] rejig Dockerfile to reduce layers and other cleanups to make it smaller (current release is 2GB, this build is 4GB)
 [] Install known versions of Browsers and LH
 [] Remove Selenium telemetry
