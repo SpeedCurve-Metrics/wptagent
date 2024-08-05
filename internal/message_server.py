@@ -8,7 +8,6 @@ except Exception:
     pass
 from multiprocessing import JoinableQueue
 import logging
-import sys
 import threading
 import time
 import tornado.ioloop

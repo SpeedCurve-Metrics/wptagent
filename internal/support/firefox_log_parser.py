@@ -20,7 +20,6 @@ import gzip
 import logging
 import os
 import re
-import sys
 from time import monotonic
 from urllib.parse import urlsplit # pylint: disable=import-error
 

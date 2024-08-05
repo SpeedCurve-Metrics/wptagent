@@ -12,7 +12,6 @@ import platform
 import shutil
 import signal
 import subprocess
-import errno
 import sys
 import threading
 import time
@@ -479,7 +478,7 @@ class DesktopBrowser(BaseBrowser):
                     while not started and monotonic() < end_time:
                         if os.path.isfile(task['video_file']):
                             video_size = os.path.getsize(task['video_file'])
-                            if initial_size == None:
+                            if initial_size is None:
                                 initial_size = video_size
                             logging.debug("Video file size: %d", video_size)
                             if video_size > initial_size or video_size > 10000:

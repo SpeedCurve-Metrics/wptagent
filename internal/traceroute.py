@@ -9,7 +9,6 @@ import os
 import platform
 import re
 import subprocess
-import sys
 from urllib.parse import urlparse # pylint: disable=import-error
 
 class Traceroute(object):

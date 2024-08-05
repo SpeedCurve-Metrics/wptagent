@@ -13,7 +13,6 @@ import re
 import shutil
 import socket
 import subprocess
-import sys
 import threading
 import time
 import zipfile
@@ -1209,7 +1208,7 @@ class WebPageTest(object):
         # pass the data fields as query params and any files as post data
         url += "?"
         for key in data:
-            if data[key] != None:
+            if data[key] is not None:
                 url += key + '=' + quote_plus(data[key]) + '&'
         logging.debug(url)
         try:

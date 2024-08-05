@@ -12,7 +12,6 @@ import psutil
 import re
 import shutil
 import subprocess
-import sys
 import threading
 import time
 from time import monotonic

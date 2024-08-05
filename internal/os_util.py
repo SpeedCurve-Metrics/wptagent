@@ -124,6 +124,6 @@ def get_file_version(filename):
         ms = info['FileVersionMS']
         ls = info['FileVersionLS']
         version = '{0}.{1}.{2}.{3}'.format(HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls))
-    except:
+    except Exception:
         logging.exception('Error getting file version for %s', filename)
     return version

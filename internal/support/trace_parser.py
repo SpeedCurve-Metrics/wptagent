@@ -20,7 +20,6 @@ import logging
 import math
 import os
 import re
-import sys
 import time
 from urllib.parse import urlparse # pylint: disable=import-error
 

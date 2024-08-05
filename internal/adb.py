@@ -8,7 +8,6 @@ import os
 import platform
 import re
 import subprocess
-import sys
 from threading import Timer
 import time
 from time import monotonic

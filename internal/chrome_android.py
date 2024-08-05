@@ -8,7 +8,6 @@ import logging
 import os
 import re
 import shutil
-import sys
 import time
 from time import monotonic
 from .devtools_browser import DevtoolsBrowser

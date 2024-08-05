@@ -11,7 +11,6 @@ import subprocess
 import shutil
 import threading
 import time
-import sys
 from .desktop_browser import DesktopBrowser
 from .devtools_browser import DevtoolsBrowser
 from .support.netlog_parser import NetLogParser
@@ -372,7 +371,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
 
         # Remove exisiting requests in NetLog Parser (need to keep constants for parsing future events)
         with self.netlog_lock:
-            self.netlog.clear_requests();
+            self.netlog.clear_requests()
 
         DevtoolsBrowser.on_start_recording(self, task)
 

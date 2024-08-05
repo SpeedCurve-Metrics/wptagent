@@ -2,8 +2,12 @@
 # Copyright 2017 Google Inc.
 # Use of this source code is governed by the Apache 2.0 license that can be
 # found in the LICENSE file.
-"""Main entry point for interfacing with Chrome's remote debugging protocol"""
-"""Protocol docs: https://chromedevtools.github.io/devtools-protocol/"""
+"""
+Main entry point for interfacing with Chrome's remote debugging protocol
+
+Protocol docs: https://chromedevtools.github.io/devtools-protocol/
+"""
+
 import base64
 import gzip
 import logging
@@ -11,7 +15,6 @@ import multiprocessing
 import os
 import re
 import subprocess
-import sys
 import time
 import zipfile
 from time import monotonic

@@ -4,7 +4,6 @@
 # found in the LICENSE file.
 """Microsoft Edge testing"""
 from datetime import datetime, timedelta
-import glob
 import gzip
 import io
 import logging
@@ -12,7 +11,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import time
 from time import monotonic
 from urllib.parse import urlsplit # pylint: disable=import-error
@@ -411,7 +409,7 @@ class Edge(DesktopBrowser):
                     message['data']['Markup'] in self.CMarkup:
                 logging.debug("Injecting script: \n%s", self.job['injectScript'])
                 self.execute_js(self.job['injectScript'])
-            tid = message['data']['EventContextId']  if 'EventContextId' in message['data'] else  message['tid'];
+            tid = message['data']['EventContextId']  if 'EventContextId' in message['data'] else  message['tid']
             if  tid in self.pageContexts:
                 if message['Event'] == 'Mshtml_WebOCEvents_DocumentComplete':
                     if 'CMarkup' in message['data'] and message['data']['CMarkup'] in self.CMarkup:

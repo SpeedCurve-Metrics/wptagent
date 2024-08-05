@@ -102,7 +102,7 @@ def read_metadata(font):
     try:
         ttf.getGlyphNames()
     except Exception:
-        logging.error('Not a vaild font: ' + request['url'])
+        logging.error('Not a vaild font: ' + font)
         return None
     reader = ttf.reader
 

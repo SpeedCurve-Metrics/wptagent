@@ -10,9 +10,7 @@ Useful links
     Docs on Chromium network stack https://source.chromium.org/chromium/chromium/src/+/main:net/docs/net-log.md
 
 TODO (AD) Needs cleaning up to make it more 'pythonic' - snake case etc.
-"""
 
-"""
 Copyright 2022 SpeedCurve Limited
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -29,14 +27,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import gzip
 import logging
 import os
 import re
-import sys
 import time
-
 from urllib.parse import urlparse # pylint: disable=import-error
 
 # try a fast json parser if it is installed
@@ -474,7 +469,7 @@ class NetLogParser():
                 found_1st_request = False
                 requests_to_remove = []
                 for index, request in enumerate(requests):
-                    if found_1st_request == False and \
+                    if found_1st_request is False and \
                         'initiator' in request and request['initiator'] == 'not an origin':
                         requests_to_remove.append(index)
                     else:
@@ -490,7 +485,7 @@ class NetLogParser():
                 for request in requests:
                     # Only take the timing from the first remaining request and skip others
                     # TODO (AD) Review as this timing point should really be NavigationStart
-                    if self.start_time != None:
+                    if self.start_time is not None:
                         continue
                     for time_name in times:
                         if time_name in request and self.marked_start_time is None:

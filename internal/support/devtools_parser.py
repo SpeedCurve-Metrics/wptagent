@@ -19,7 +19,6 @@ import gzip
 import logging
 import os
 import re
-import sys
 import time
 HAS_FUTURE = False
 try:
@@ -27,7 +26,6 @@ try:
     HAS_FUTURE = True
 except BaseException:
     pass
-
 from urllib.parse import urlsplit # pylint: disable=import-error
 
 # try a fast json parser if it is installed

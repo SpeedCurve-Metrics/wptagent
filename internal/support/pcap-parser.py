@@ -21,7 +21,6 @@ import logging
 import math
 import os
 import struct
-import sys
 import time
 
 #Globals
@@ -52,7 +51,7 @@ class Pcap():
       result = {"bytes": self.bytes}
       json.dump(result, f)
       logging.info('Result stats written to {0}'.format(out))
-    except:
+    except Exception:
       logging.exception('Error writing result stats to {0}'.format(out))
     f.close()
 
@@ -66,7 +65,7 @@ class Pcap():
     try:
       json.dump(self.slices, f)
       logging.info('Result details written to {0}'.format(out))
-    except:
+    except Exception:
       logging.exception('Error writing result details to {0}'.format(out))
     f.close()
 
@@ -149,7 +148,7 @@ class Pcap():
                 logging.exception('Error processing packet')
       else:
         logging.critical("Invalid pcap file " + pcap)
-    except:
+    except Exception:
       logging.exception("Error processing pcap " + pcap)
 
     if f is not None:
