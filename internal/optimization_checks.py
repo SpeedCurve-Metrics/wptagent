@@ -419,7 +419,7 @@ class OptimizationChecks(object):
         for request_id in self.requests:
             try:
                 request = self.requests[request_id]
-                if 'url' in request:
+                if 'url' in request and 'response_headers' in request:
                     check = {'score': 100}
                     url = request['full_url'] if 'full_url' in request else request['url']
                     parsed = urlsplit(url)
@@ -1036,6 +1036,7 @@ class OptimizationChecks(object):
 
     def sniff_content(self, raw_bytes):
         """Check the beginning of the file to see if it is a known image type"""
+        # TODO (AD) Add avif, jpegxl etc support
         content_type = None
         hex_bytes = binascii.hexlify(raw_bytes[:14])
         # spell-checker: disable

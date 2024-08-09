@@ -87,7 +87,10 @@ def _read_codepoint_glyph_counts(ttf):
     try:
         glyph_count = len(ttf.getGlyphOrder())
         unicode_cmaps = (list(t.cmap.keys()) for t in ttf['cmap'].tables if t.isUnicode())
+        logging.debug(unicode_cmaps)
+
         unique_codepoints = functools.reduce(lambda acc, u: acc | u, unicode_cmaps, set())
+
         return {
             'num_cmap_codepoints': len(unique_codepoints),
             'num_glyphs': glyph_count

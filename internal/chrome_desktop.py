@@ -161,7 +161,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         # TODO (AD) Stop doing this for lighthouse runs
         if 'netlog' in job and job['netlog']:
             self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
-            self.netlog_out = open(self.netlog_file, 'wb')
+            self.netlog_out = open(self.netlog_file, 'wt')
 
             if not streamed_netlog:
                 args.append('--log-net-log="{0}"'.format(self.netlog_file))
@@ -246,7 +246,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         logging.debug('process_netlog_stream entry')
 
         with self.netlog_lock:
-            self.netlog_in = open(self.netlog_pipe, 'r')
+            self.netlog_in = open(self.netlog_pipe, 'rt')
 
         if self.netlog_in:
             logging.debug('Netlog pipe connected...')
