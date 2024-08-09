@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Process a Chrome Netlog into a set of requests for further processing by the agent
 
@@ -10,9 +10,7 @@ Useful links
     Docs on Chromium network stack https://source.chromium.org/chromium/chromium/src/+/main:net/docs/net-log.md
 
 TODO (AD) Needs cleaning up to make it more 'pythonic' - snake case etc.
-"""
 
-"""
 Copyright 2022 SpeedCurve Limited
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -29,23 +27,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import gzip
 import logging
 import os
 import re
-import sys
 import time
-
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    unicode = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urlparse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+from urllib.parse import urlparse # pylint: disable=import-error
 
 # try a fast json parser if it is installed
 try:
@@ -183,7 +170,7 @@ class NetLogParser():
         
         if 'source' in event and 'id' in event['source'] and 'name' in event:
             try:
-                if isinstance(event['source']['id'], (str, unicode)):
+                if isinstance(event['source']['id'], str):
                     event['id'] = int(event['id'], 16)
 
 #                event_type = None
@@ -257,22 +244,22 @@ class NetLogParser():
                             scheme = 'https'
                     for header in request['request_headers']:
                         try:
-                            index = header.find(u':', 1)
+                            index = header.find(':', 1)
                             if index > 0:
-                                key = header[:index].strip(u': ').lower()
-                                value = header[index + 1:].strip(u': ')
-                                if key == u'scheme':
-                                    scheme = unicode(value)
-                                elif key == u'host':
-                                    origin = unicode(value)
-                                elif key == u'authority':
-                                    origin = unicode(value)
-                                elif key == u'path':
-                                    path = unicode(value)
+                                key = header[:index].strip(': ').lower()
+                                value = header[index + 1:].strip(': ')
+                                if key == 'scheme':
+                                    scheme = str(value)
+                                elif key == 'host':
+                                    origin = str(value)
+                                elif key == 'authority':
+                                    origin = str(value)
+                                elif key == 'path':
+                                    path = str(value)
                         except Exception:
                             logging.exception("Error generating url from request headers")
                     if scheme and origin and path:
-                        request['url'] = scheme + u'://' + origin + path
+                        request['url'] = scheme + '://' + origin + path
 
                 if 'url' in request and not request['url'].startswith('http://127.0.0.1'):
                     request_host = urlparse(request['url']).hostname
@@ -482,7 +469,7 @@ class NetLogParser():
                 found_1st_request = False
                 requests_to_remove = []
                 for index, request in enumerate(requests):
-                    if found_1st_request == False and \
+                    if found_1st_request is False and \
                         'initiator' in request and request['initiator'] == 'not an origin':
                         requests_to_remove.append(index)
                     else:
@@ -498,7 +485,7 @@ class NetLogParser():
                 for request in requests:
                     # Only take the timing from the first remaining request and skip others
                     # TODO (AD) Review as this timing point should really be NavigationStart
-                    if self.start_time != None:
+                    if self.start_time is not None:
                         continue
                     for time_name in times:
                         if time_name in request and self.marked_start_time is None:
@@ -970,7 +957,7 @@ class NetLogParser():
         try:
             _, ext = os.path.splitext(out_file)
             if ext.lower() == '.gz':
-                with gzip.open(out_file, GZIP_TEXT) as f:
+                with gzip.open(out_file, 'wt') as f:
                     json.dump(json_data, f)
             else:
                 with open(out_file, 'w') as f:

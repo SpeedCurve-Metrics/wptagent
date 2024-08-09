@@ -11,7 +11,6 @@ import subprocess
 import shutil
 import threading
 import time
-import sys
 from .desktop_browser import DesktopBrowser
 from .devtools_browser import DevtoolsBrowser
 from .support.netlog_parser import NetLogParser
@@ -22,16 +21,7 @@ try:
 except BaseException:
     import json
 
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    unicode = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urlparse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
-
+from urllib.parse import urlparse # pylint: disable=import-error
 
 #
 # Where possible prefer Chrome switches over blocking URLs
@@ -173,7 +163,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         # TODO (AD) Stop doing this for lighthouse runs
         if 'netlog' in job and job['netlog']:
             self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
-            self.netlog_out = open(self.netlog_file, 'wb')
+            self.netlog_out = open(self.netlog_file, 'wt')
 
             if not streamed_netlog:
                 args.append('--log-net-log="{0}"'.format(self.netlog_file))
@@ -258,7 +248,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         logging.debug('process_netlog_stream entry')
 
         with self.netlog_lock:
-            self.netlog_in = open(self.netlog_pipe, 'r')
+            self.netlog_in = open(self.netlog_pipe, 'rt')
 
         if self.netlog_in:
             logging.debug('Netlog pipe connected...')
@@ -383,7 +373,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
 
         # Remove exisiting requests in NetLog Parser (need to keep constants for parsing future events)
         with self.netlog_lock:
-            self.netlog.clear_requests();
+            self.netlog.clear_requests()
 
         DevtoolsBrowser.on_start_recording(self, task)
 

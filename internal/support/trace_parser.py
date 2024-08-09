@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -20,17 +20,8 @@ import logging
 import math
 import os
 import re
-import sys
 import time
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    unicode = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urlparse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+from urllib.parse import urlparse # pylint: disable=import-error
 
 # try a fast json parser if it is installed
 try:
@@ -78,10 +69,10 @@ class Trace():
         try:
             _, ext = os.path.splitext(out_file)
             if ext.lower() == '.gz':
-                with gzip.open(out_file, GZIP_TEXT) as f:
+                with gzip.open(out_file, 'wt') as f:
                     json.dump(json_data, f)
             else:
-                with open(out_file, 'w') as f:
+                with open(out_file, 'w') as f: # TODO (AD) Should this be wt?
                     json.dump(json_data, f)
         except BaseException:
             logging.exception("Error writing to " + out_file)
@@ -149,9 +140,9 @@ class Trace():
         try:
             _, ext = os.path.splitext(trace)
             if ext.lower() == '.gz':
-                f = gzip.open(trace, GZIP_READ_TEXT)
+                f = gzip.open(trace, 'rt')
             else:
-                f = open(trace, 'r')
+                f = open(trace, 'r') # TODO (AD) Should this be rt?
             for line in f:
                 try:
                     trace_event = json.loads(line.strip("\r\n\t ,"))
@@ -178,9 +169,9 @@ class Trace():
         try:
             _, ext = os.path.splitext(timeline)
             if ext.lower() == '.gz':
-                f = gzip.open(timeline, GZIP_READ_TEXT)
+                f = gzip.open(timeline, 'rt')
             else:
-                f = open(timeline, 'r')
+                f = open(timeline, 'r') # TODO (AD) Should this be rt?
             events = json.load(f)
             if events:
                 # convert the old format timeline events into our internal
@@ -533,9 +524,9 @@ class Trace():
 
             # Create the empty time slices for all of the threads
             self.cpu['slices'] = {}
-            for thread in self.threads.keys():
+            for thread in list(self.threads.keys()):
                 self.cpu['slices'][thread] = {'total': [0.0] * slice_count}
-                for name in self.threads[thread].keys():
+                for name in list(self.threads[thread].keys()):
                     self.cpu['slices'][thread][name] = [0.0] * slice_count
 
             # Go through all of the timeline events recursively and account for
@@ -549,9 +540,9 @@ class Trace():
 
             # Go through all of the fractional times and convert the float
             # fractional times to integer usecs
-            for thread in self.cpu['slices'].keys():
+            for thread in list(self.cpu['slices'].keys()):
                 del self.cpu['slices'][thread]['total']
-                for name in self.cpu['slices'][thread].keys():
+                for name in list(self.cpu['slices'][thread].keys()):
                     for slice in range(len(self.cpu['slices'][thread][name])):
                         self.cpu['slices'][thread][name][slice] =\
                             int(self.cpu['slices'][thread][name]
@@ -560,14 +551,14 @@ class Trace():
             # Pick the candidate main thread with the most activity
             main_threads = list(self.cpu['main_threads'])
             if len(main_threads) == 0:
-                main_threads = self.cpu['slices'].keys()
+                main_threads = list(self.cpu['slices'].keys())
             main_thread = None
             main_thread_cpu = 0
             for thread in main_threads:
                 try:
                     thread_cpu = 0
                     if thread in self.cpu['slices']:
-                        for name in self.cpu['slices'][thread].keys():
+                        for name in list(self.cpu['slices'][thread].keys()):
                             for slice in range(len(self.cpu['slices'][thread][name])):
                                 thread_cpu += self.cpu['slices'][thread][name][slice]
                         if main_thread is None or thread_cpu > main_thread_cpu:
@@ -693,7 +684,7 @@ class Trace():
                 # make sure we don't exceed 100% for any slot
                 if self.cpu['slices'][thread]['total'][slice_number] > 1.0:
                     available = max(0.0, 1.0 - fraction)
-                    for slice_name in self.cpu['slices'][thread].keys():
+                    for slice_name in list(self.cpu['slices'][thread].keys()):
                         if slice_name != name:
                             self.cpu['slices'][thread][slice_name][slice_number] =\
                                 min(self.cpu['slices'][thread]
@@ -766,7 +757,7 @@ class Trace():
     def ProcessNetlogEvent(self, trace_event):
         if 'args' in trace_event and 'id' in trace_event and 'name' in trace_event:
             try:
-                if isinstance(trace_event['id'], (str, unicode)):
+                if isinstance(trace_event['id'], str):
                     trace_event['id'] = int(trace_event['id'], 16)
                 event_type = None
                 name = trace_event['name']
@@ -836,22 +827,22 @@ class Trace():
                             scheme = 'https'
                     for header in request['request_headers']:
                         try:
-                            index = header.find(u':', 1)
+                            index = header.find(':', 1)
                             if index > 0:
-                                key = header[:index].strip(u': ').lower()
-                                value = header[index + 1:].strip(u': ')
-                                if key == u'scheme':
-                                    scheme = unicode(value)
-                                elif key == u'host':
-                                    origin = unicode(value)
-                                elif key == u'authority':
-                                    origin = unicode(value)
-                                elif key == u'path':
-                                    path = unicode(value)
+                                key = header[:index].strip(': ').lower()
+                                value = header[index + 1:].strip(': ')
+                                if key == 'scheme':
+                                    scheme = str(value)
+                                elif key == 'host':
+                                    origin = str(value)
+                                elif key == 'authority':
+                                    origin = str(value)
+                                elif key == 'path':
+                                    path = str(value)
                         except Exception:
                             logging.exception("Error generating url from request headers")
                     if scheme and origin and path:
-                        request['url'] = scheme + u'://' + origin + path
+                        request['url'] = scheme + '://' + origin + path
                 if 'url' in request and not request['url'].startswith('http://127.0.0.1'):
                     request_host = urlparse(request['url']).hostname
                     if request_host not in known_hosts:

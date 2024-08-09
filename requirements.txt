@@ -1,0 +1,15 @@
+brotli
+dnspython
+fonttools
+future
+marionette_driver
+monotonic
+mozfile
+mozrunner
+pillow
+psutil
+requests
+selenium
+tornado
+wsaccel
+xvfbwrapper
