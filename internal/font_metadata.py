@@ -5,7 +5,6 @@
 """Extract metadata from OpenType fonts."""
 
 from fontTools.ttLib import TTFont
-import functools
 import logging
 
 
@@ -86,10 +85,15 @@ def _read_fvar(ttf):
 def _read_codepoint_glyph_counts(ttf):
     try:
         glyph_count = len(ttf.getGlyphOrder())
-        unicode_cmaps = (list(t.cmap.keys()) for t in ttf['cmap'].tables if t.isUnicode())
-        logging.debug(unicode_cmaps)
+        
+        # Create list of all unicode codepoints in font
+        unicode_cmaps = list()
+        for table in ttf['cmap'].tables:
+            if table.isUnicode():
+                unicode_cmaps.extend(list(table.cmap.keys()))
 
-        unique_codepoints = functools.reduce(lambda acc, u: acc | u, unicode_cmaps, set())
+        # Use set to remove duplicates
+        unique_codepoints = set(unicode_cmaps)
 
         return {
             'num_cmap_codepoints': len(unique_codepoints),
