@@ -13,6 +13,8 @@
 [] Prompts for password on startup in VM
 [] Seeing ERR_CONNECTION_RESET in netlogs when testing www.bbc.co.uk in Chrome
 [] DNS lookups seem to be missing
+[] Error extracting font metadata
+
 
 #### Docker Only
 [] tcpdump fails to launch on Docker (works in VM)
