@@ -1,6 +1,6 @@
 # Current status of Python 3 / Ubuntu 22.04 Post
 
-## 2024-08-09
+## 2024-08-13
 
 ### TODO
 
@@ -12,8 +12,11 @@
 [] Add prefs to block FF access to captive portal and ??? (what was the other thing)
 [] Prompts for password on startup in VM
 [] Seeing ERR_CONNECTION_RESET in netlogs when testing www.bbc.co.uk in Chrome
-[] DNS lookups seem to be missing
-[] Error extracting font metadata
+[] Failures posting large files to server e.g. debug log
+[] Netlog thread trying to read the pipe after it's closed - this looks like a timing issue with the threads
+[] Remove blink feature usage from trace_parser
+[] Remove netlog code from trace_parser 
+
 
 
 #### Docker Only
@@ -22,6 +25,10 @@
 
 ### Done
 [x] Errors flushing DNS
+[x] Error extracting font metadata
+[x] Save generated netlog
+[x] DNS lookups seem to be missing
+[x] Removed H2 push from NetLog parser as have been removed from Chrome
 
 ### Notes
 
