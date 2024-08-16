@@ -512,7 +512,7 @@ class DesktopBrowser(BaseBrowser):
             if platform.system() == 'Windows':
                 logging.debug('Attempting graceful ffmpeg shutdown\n')
                 self.ffmpeg.communicate(input='q')
-                if self.ffmpeg.returncode is not 0:
+                if self.ffmpeg.returncode != 0:
                     logging.exception('ERROR: ffmpeg returned non-zero exit code %s\n', str(self.ffmpeg.returncode))
                 else:
                     logging.debug('ffmpeg shutdown gracefully\n')
