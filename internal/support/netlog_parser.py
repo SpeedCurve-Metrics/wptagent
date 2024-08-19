@@ -420,7 +420,7 @@ class NetLogParser():
                     for dns_id in self.netlog['dns']:
                         dns = self.netlog['dns'][dns_id]
                         if 'host' in dns and 'start' in dns and 'end' in dns \
-                                and dns['end'] >= dns['start'] and 'address_list' in dns:
+                                and dns['end'] >= dns['start']:
                             hostname = dns['host']
                             separator = hostname.find('://')
                             if separator > 0:
@@ -797,8 +797,6 @@ class NetLogParser():
                 entry['end'] = event['time']
         if 'host' not in entry and 'host' in params:
             entry['host'] = params['host']
-        if 'address_list' in params:
-            entry['address_list'] = params['address_list']
 
     def ProcessNetlogSocketEvent(self, event):
         if 'socket' not in self.netlog:
