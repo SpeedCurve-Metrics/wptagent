@@ -14,7 +14,6 @@
 [] Seeing ERR_CONNECTION_RESET in netlogs when testing www.bbc.co.uk in Chrome
 [] Failures posting large files to server e.g. debug log
 [] Netlog thread trying to read the pipe after it's closed - this looks like a timing issue with the threads
-[] Remove blink feature usage from trace_parser
 [] Remove netlog code from trace_parser 
 
 
@@ -29,6 +28,7 @@
 [x] Save generated netlog
 [x] DNS lookups seem to be missing
 [x] Removed H2 push from NetLog parser as have been removed from Chrome
+[x] Remove blink feature usage from trace_parser
 
 ### Notes
 

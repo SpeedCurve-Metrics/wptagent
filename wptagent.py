@@ -816,17 +816,18 @@ def main():
 
     # Set up logging
     log_level = logging.CRITICAL
-    if options.verbose == 1:
-        log_level = logging.ERROR
-    elif options.verbose == 2:
-        log_level = logging.WARNING
-    elif options.verbose == 3:
-        log_level = logging.INFO
-    elif options.verbose >= 4:
-        log_level = logging.DEBUG
-    logging.basicConfig(level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s",
-                        datefmt="%H:%M:%S")
+    match options.verbose:
+        case 1:
+            log_level = logging.ERROR
+        case 2:
+            log_level = logging.WARNING
+        case 3:
+            log_level = logging.INFO 
+        case 4:
+            log_level = logging.DEBUG
+    logging.basicConfig(level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s", datefmt="%H:%M:%S")
 
+    # ???
     if options.log:
         err_log = logging.handlers.RotatingFileHandler(options.log, maxBytes=1000000,
                                                        backupCount=5, delay=True)

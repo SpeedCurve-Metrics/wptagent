@@ -950,7 +950,7 @@ def main():
             
     logging.basicConfig(level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s", datefmt="%H:%M:%S")
 
-    # Check input and output files specified
+    # Check input and output files are specified
     if not options.netlog: 
         parser.error("Input NetLog file is not specified.")
 
