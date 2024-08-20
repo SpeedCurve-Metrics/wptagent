@@ -18,7 +18,7 @@ from ws4py.exc import HandshakeError, StreamClosed
 from ws4py.streaming import Stream
 from ws4py.messaging import Message, PingControlMessage,\
     PongControlMessage
-from ws4py.compat import str, str
+from ws4py.compat import basestring, unicode
 
 DEFAULT_READING_SIZE = 2
 
@@ -298,7 +298,7 @@ class WebSocket(object):
         """
         message_sender = self.stream.binary_message if binary else self.stream.text_message
 
-        if isinstance(payload, str) or isinstance(payload, bytearray):
+        if isinstance(payload, basestring) or isinstance(payload, bytearray):
             m = message_sender(payload).single(mask=self.stream.always_mask)
             self._write(m)
 

@@ -220,5 +220,5 @@ if __name__ == '__main__':
         return loop.create_server(proto_factory, '', 9007)
 
     s = loop.run_until_complete(start_server())
-    print(('serving on', s.sockets[0].getsockname()))
+    print('serving on', s.sockets[0].getsockname())
     loop.run_forever()

@@ -266,7 +266,7 @@ class Frame(object):
         """
         masked = bytearray(data)
         if py3k: key = self.masking_key
-        else: key = list(map(ord, self.masking_key))
+        else: key = map(ord, self.masking_key)
         for i in range(len(data)):
             masked[i] = masked[i] ^ key[i%4]
         return masked

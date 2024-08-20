@@ -91,10 +91,11 @@ class Trace():
             self.write_json(out_file, self.scripts)
 
     def WriteFeatureUsage(self, out_file):
+        # TODO (AD) Why is this here?
         self.post_process_netlog_events()
-        out = self.post_process_feature_usage()
-        if out is not None:
-            self.write_json(out_file, out)
+#        out = self.post_process_feature_usage()
+#        if out is not None:
+#            self.write_json(out_file, out)
 
     def WriteInteractive(self, out_file):
         # Generate the interactive periods from the long-task data

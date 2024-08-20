@@ -228,9 +228,9 @@ class WebSocketManager(threading.Thread):
 
     def __iter__(self):
         if py3k:
-            return iter(list(self.websockets.values()))
-        else:
             return iter(self.websockets.values())
+        else:
+            return self.websockets.itervalues()
 
     def __contains__(self, ws):
         fd = ws.sock.fileno()
@@ -356,9 +356,9 @@ class WebSocketManager(threading.Thread):
         with self.lock:
             websockets = self.websockets.copy()
             if py3k:
-                ws_iter = iter(list(websockets.values()))
-            else:
                 ws_iter = iter(websockets.values())
+            else:
+                ws_iter = websockets.itervalues()
 
         for ws in ws_iter:
             if not ws.terminated:

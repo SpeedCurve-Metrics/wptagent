@@ -15,6 +15,7 @@
 [] Failures posting large files to server e.g. debug log
 [] Netlog thread trying to read the pipe after it's closed - this looks like a timing issue with the threads
 [] Remove netlog code from trace_parser 
+[] Error closing websocket
 
 
 
