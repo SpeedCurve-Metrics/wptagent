@@ -10,18 +10,21 @@
 [] Install known versions of Browsers and LH
 [] Remove Selenium telemetry
 [] Add prefs to block FF access to captive portal and ??? (what was the other thing)
-[] Prompts for password on startup in VM
 [] Seeing ERR_CONNECTION_RESET in netlogs when testing www.bbc.co.uk in Chrome
-[] Failures posting large files to server e.g. debug log
-[] Netlog thread trying to read the pipe after it's closed - this looks like a timing issue with the threads
 [] Remove netlog code from trace_parser 
-[] Error closing websocket
 
 
 
 #### Docker Only
 [] tcpdump fails to launch on Docker (works in VM)
 [] test traceroute
+[] test LH
+
+
+### Temp Workarounds
+[] Prompts for password on startup in VM - grant priveledges in /etc/sudoers
+[x] Failures posting large files to server e.g. debug log - fixed in php.ini
+
 
 ### Done
 [x] Errors flushing DNS
@@ -30,13 +33,14 @@
 [x] DNS lookups seem to be missing
 [x] Removed H2 push from NetLog parser as have been removed from Chrome
 [x] Remove blink feature usage from trace_parser
+[x] Error closing websocket (reverted automatic changes to ws4py)
+[x] Netlog thread trying to read the pipe after it's closed - this looks like a timing issue with the threads and only appears to happen during a LH run
+
 
 ### Notes
 
 Chrome and Firefox tests execute and produce waterfalls but there are still errors in the logs
 
-Lightouse fails to execute – shell can't find it so assume it's a problem with it installed via NVM
 
-tcpdump (and presumably traceroute) fail to launch with a python error
 
 

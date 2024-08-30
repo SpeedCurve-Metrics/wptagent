@@ -140,31 +140,33 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
 
         streamed_netlog = False
 
-        if platform.system() in ["Linux", "Darwin"]:
-            self.netlog_pipe = os.path.join(task['dir'], 'netlog.pipe')
-            try:            
-                # Make a pipe and set it as the sink for Chrome netlog events
-                os.mkfifo(self.netlog_pipe)
-                args.append('--log-net-log="{0}"'.format(self.netlog_pipe))
-                streamed_netlog = True
+        # TODO (AD) Can I just wrap this in a task['running_lighthouse'] is False check?
+        if task['running_lighthouse'] is False:
+            if platform.system() in ["Linux", "Darwin"]:
+                self.netlog_pipe = os.path.join(task['dir'], 'netlog.pipe')
+                try:            
+                    # Make a pipe and set it as the sink for Chrome netlog events
+                    os.mkfifo(self.netlog_pipe)
+                    args.append('--log-net-log="{0}"'.format(self.netlog_pipe))
+                    streamed_netlog = True
 
-                # Process stream on a separate thread
-                self.netlog_thread = threading.Thread(target=self.process_netlog_stream)
-                self.netlog_thread.start()
+                    # Process stream on a separate thread
+                    self.netlog_thread = threading.Thread(target=self.process_netlog_stream)
+                    self.netlog_thread.start()
 
-                self.netlog = NetLogParser()
+                    self.netlog = NetLogParser()
 
-            except Exception:
-                logging.exception('Error creating pipe for NetLog')
+                except Exception:
+                    logging.exception('Error creating pipe for NetLog')
 
-        # If we need to keep the netlog create file to write it to
-        # TODO (AD) Stop doing this for lighthouse runs
-        if 'netlog' in job and job['netlog']:
-            self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
-            self.netlog_out = open(self.netlog_file, 'wt')
+            # If we need to keep the netlog create file to write it to
+            # TODO (AD) Stop doing this for lighthouse runs
+            if 'netlog' in job and job['netlog']:
+                self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
+                self.netlog_out = open(self.netlog_file, 'wt')
 
-            if not streamed_netlog:
-                args.append('--log-net-log="{0}"'.format(self.netlog_file))
+                if not streamed_netlog:
+                    args.append('--log-net-log="{0}"'.format(self.netlog_file))
 
         if 'profile' in task:
             args.append('--user-data-dir="{0}"'.format(task['profile']))
