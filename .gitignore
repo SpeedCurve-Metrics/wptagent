@@ -21,3 +21,4 @@ wptagent.alive
 vpn-reverse-tether/amd64/tether.sh
 vpn.sh
 .DS_Store
+.venv

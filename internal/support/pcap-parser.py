@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -21,12 +21,7 @@ import logging
 import math
 import os
 import struct
-import sys
 import time
-if (sys.version_info >= (3, 0)):
-    GZIP_TEXT = 'wt'
-else:
-    GZIP_TEXT = 'w'
 
 #Globals
 options = None
@@ -49,14 +44,14 @@ class Pcap():
   def SaveStats(self, out):
     _, ext = os.path.splitext(out)
     if ext.lower() == '.gz':
-      f = gzip.open(out, GZIP_TEXT)
+      f = gzip.open(out, 'wt')
     else:
-      f = open(out, 'w')
+      f = open(out, 'w') # TODO (AD) Should this be wt?
     try:
       result = {"bytes": self.bytes}
       json.dump(result, f)
       logging.info('Result stats written to {0}'.format(out))
-    except:
+    except Exception:
       logging.exception('Error writing result stats to {0}'.format(out))
     f.close()
 
@@ -64,13 +59,13 @@ class Pcap():
   def SaveDetails(self, out):
     _, ext = os.path.splitext(out)
     if ext.lower() == '.gz':
-      f = gzip.open(out, GZIP_TEXT)
+      f = gzip.open(out, 'wt')
     else:
-      f = open(out, 'w')
+      f = open(out, 'w') # (AD) Should this be wt?
     try:
       json.dump(self.slices, f)
       logging.info('Result details written to {0}'.format(out))
-    except:
+    except Exception:
       logging.exception('Error writing result details to {0}'.format(out))
     f.close()
 
@@ -78,11 +73,11 @@ class Pcap():
   def Print(self):
     global options
     if options.json:
-      print(json.dumps(self.bytes, indent=2))
+      print((json.dumps(self.bytes, indent=2)))
     else:
-      print("Bytes Out: {0:d}".format(self.bytes['out']))
-      print("Bytes In:  {0:d}".format(self.bytes['in']))
-      print("Duplicate Bytes In:  {0:d}".format(self.bytes['in_dup']))
+      print(("Bytes Out: {0:d}".format(self.bytes['out'])))
+      print(("Bytes In:  {0:d}".format(self.bytes['in'])))
+      print(("Duplicate Bytes In:  {0:d}".format(self.bytes['in_dup'])))
 
 
   def Process(self, pcap):
@@ -153,7 +148,7 @@ class Pcap():
                 logging.exception('Error processing packet')
       else:
         logging.critical("Invalid pcap file " + pcap)
-    except:
+    except Exception:
       logging.exception("Error processing pcap " + pcap)
 
     if f is not None:
@@ -370,18 +365,22 @@ def main():
   parser.add_argument('-j', '--json', action='store_true', default=False, help="Set output format to JSON")
   options = parser.parse_args()
 
-  # Set up logging
+# Set up logging
   log_level = logging.CRITICAL
-  if options.verbose == 1:
-    log_level = logging.ERROR
-  elif options.verbose == 2:
-    log_level = logging.WARNING
-  elif options.verbose == 3:
-    log_level = logging.INFO
-  elif options.verbose >= 4:
-    log_level = logging.DEBUG
+
+  match options.verbose:
+      case 1:
+          log_level = logging.ERROR
+      case 2:
+          log_level = logging.WARNING
+      case 3:
+          log_level = logging.INFO 
+      case 4:
+          log_level = logging.DEBUG
+          
   logging.basicConfig(level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s", datefmt="%H:%M:%S")
 
+  # Check input file specified
   if not options.input:
     parser.error("Input trace file is not specified.")
 

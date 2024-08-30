@@ -12,16 +12,11 @@ import re
 import shutil
 import struct
 import subprocess
-import sys
 import threading
 import time
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    GZIP_TEXT = 'wt'
-    unicode = str
-else:
-    from monotonic import monotonic
-    GZIP_TEXT = 'w'
+
+from time import monotonic
+
 try:
     import ujson as json
 except BaseException:
@@ -399,7 +394,7 @@ class OptimizationChecks(object):
             # Save the results
             if self.results:
                 path = os.path.join(self.task['dir'], self.task['prefix']) + '_optimization.json.gz'
-                gz_file = gzip.open(path, GZIP_TEXT, 7)
+                gz_file = gzip.open(path, 'wt', 7)
                 if gz_file:
                     gz_file.write(json.dumps(self.results))
                     gz_file.close()
@@ -408,10 +403,7 @@ class OptimizationChecks(object):
 
     def check_keep_alive(self):
         """Check for requests where the connection is force-closed"""
-        if (sys.version_info >= (3, 0)):
-            from urllib.parse import urlsplit # pylint: disable=import-error
-        else:
-            from urlparse import urlsplit # pylint: disable=import-error
+        from urllib.parse import urlsplit # pylint: disable=import-error
             
         # build a list of origins and how many requests were issued to each
         origins = {}
@@ -427,7 +419,7 @@ class OptimizationChecks(object):
         for request_id in self.requests:
             try:
                 request = self.requests[request_id]
-                if 'url' in request:
+                if 'url' in request and 'response_headers' in request:
                     check = {'score': 100}
                     url = request['full_url'] if 'full_url' in request else request['url']
                     parsed = urlsplit(url)
@@ -587,10 +579,7 @@ class OptimizationChecks(object):
 
     def check_cdn(self):
         """Check each request to see if it was served from a CDN"""
-        if (sys.version_info >= (3, 0)):
-            from urllib.parse import urlparse # pylint: disable=import-error
-        else:
-            from urlparse import urlparse # pylint: disable=import-error
+        from urllib.parse import urlparse # pylint: disable=import-error
         start = monotonic()
         # First pass, build a list of domains and see if the headers or domain matches
         static_requests = {}
@@ -1047,6 +1036,7 @@ class OptimizationChecks(object):
 
     def sniff_content(self, raw_bytes):
         """Check the beginning of the file to see if it is a known image type"""
+        # TODO (AD) Add avif, jpegxl etc support
         content_type = None
         hex_bytes = binascii.hexlify(raw_bytes[:14])
         # spell-checker: disable

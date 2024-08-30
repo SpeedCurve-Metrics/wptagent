@@ -18,12 +18,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-import socket, struct, select, sys
+import socket
+import struct
+import select
+import sys
 
 try:
 	import plistlib
 	haveplist = True
-except:
+except Exception:
 	haveplist = False
 
 class MuxError(Exception):
@@ -91,7 +94,7 @@ class BinaryProtocol(object):
 			devid = struct.unpack("I", payload)[0]
 			return {'DeviceID': devid}
 		else:
-			raise MuxError("Invalid incoming request type %d"%req)
+			raise MuxError("Invalid incoming request type %d"%resp)
 
 	def sendpacket(self, req, tag, payload={}):
 		payload = self._pack(req, payload)

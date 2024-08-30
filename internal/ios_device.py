@@ -9,14 +9,10 @@ import multiprocessing
 import os
 import platform
 import select
-import shutil
 import subprocess
-import sys
 import threading
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-else:
-    from monotonic import monotonic
+from time import monotonic
+
 try:
     import ujson as json
 except BaseException:
@@ -302,7 +298,7 @@ class iOSDevice(object):
         """Background thread for reading messages from the browser"""
         buff = ""
         try:
-            while not self.must_disconnect and self.socket != None:
+            while not self.must_disconnect and self.socket is not None:
                 rlo, _, xlo = select.select([self.socket], [], [self.socket])
                 try:
                     if xlo:

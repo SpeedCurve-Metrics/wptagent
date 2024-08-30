@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Process a Chrome Netlog into a set of requests for further processing by the agent
 
@@ -8,11 +8,10 @@ Useful links
     Chromium Code to generates NetLog https://source.chromium.org/chromium/chromium/src/+/main:net/log/
     Docs on format https://www.chromium.org/developers/design-documents/network-stack/netlog/
     Docs on Chromium network stack https://source.chromium.org/chromium/chromium/src/+/main:net/docs/net-log.md
+    List of NetLog events https://source.chromium.org/chromium/chromium/src/+/main:net/log/net_log_event_type_list.h
 
 TODO (AD) Needs cleaning up to make it more 'pythonic' - snake case etc.
-"""
 
-"""
 Copyright 2022 SpeedCurve Limited
 Copyright 2019 WebPageTest LLC.
 Copyright 2016 Google Inc.
@@ -29,23 +28,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import gzip
 import logging
 import os
 import re
-import sys
 import time
-
-if (sys.version_info >= (3, 0)):
-    from urllib.parse import urlparse # pylint: disable=import-error
-    unicode = str
-    GZIP_TEXT = 'wt'
-    GZIP_READ_TEXT = 'rt'
-else:
-    from urlparse import urlparse # pylint: disable=import-error
-    GZIP_TEXT = 'w'
-    GZIP_READ_TEXT = 'r'
+from urllib.parse import urlparse # pylint: disable=import-error
 
 # try a fast json parser if it is installed
 try:
@@ -164,13 +152,13 @@ class NetLogParser():
                 if 'type' in event['source']:
                     event['source']['name'] = self.constants['logSourceType'][event['source']['type']]
                 if 'time' in event['source']:
-                    event['source']['time'] = int(event['source']['time']) * 1000 # TODO(AD) is int large enough in python 2.7?
+                    event['source']['time'] = int(event['source']['time']) * 1000
                 if 'start_time' in event['source']:
-                    event['source']['time'] = int(event['source']['start_time']) * 1000 # TODO(AD) is int large enough in python 2.7?
+                    event['source']['time'] = int(event['source']['start_time']) * 1000
             
             # * 1000 to convert to same scale as CDP logging / event tracing data
             if 'time' in event:
-                event['time'] = int(event['time']) * 1000 # TODO(AD) is int large enough in python 2.7?
+                event['time'] = int(event['time']) * 1000
 
             self.ProcessNetlogEvent(event)
         except Exception as error: 
@@ -183,7 +171,7 @@ class NetLogParser():
         
         if 'source' in event and 'id' in event['source'] and 'name' in event:
             try:
-                if isinstance(event['source']['id'], (str, unicode)):
+                if isinstance(event['source']['id'], str):
                     event['id'] = int(event['id'], 16)
 
 #                event_type = None
@@ -257,22 +245,22 @@ class NetLogParser():
                             scheme = 'https'
                     for header in request['request_headers']:
                         try:
-                            index = header.find(u':', 1)
+                            index = header.find(':', 1)
                             if index > 0:
-                                key = header[:index].strip(u': ').lower()
-                                value = header[index + 1:].strip(u': ')
-                                if key == u'scheme':
-                                    scheme = unicode(value)
-                                elif key == u'host':
-                                    origin = unicode(value)
-                                elif key == u'authority':
-                                    origin = unicode(value)
-                                elif key == u'path':
-                                    path = unicode(value)
+                                key = header[:index].strip(': ').lower()
+                                value = header[index + 1:].strip(': ')
+                                if key == 'scheme':
+                                    scheme = str(value)
+                                elif key == 'host':
+                                    origin = str(value)
+                                elif key == 'authority':
+                                    origin = str(value)
+                                elif key == 'path':
+                                    path = str(value)
                         except Exception:
                             logging.exception("Error generating url from request headers")
                     if scheme and origin and path:
-                        request['url'] = scheme + u'://' + origin + path
+                        request['url'] = scheme + '://' + origin + path
 
                 if 'url' in request and not request['url'].startswith('http://127.0.0.1'):
                     request_host = urlparse(request['url']).hostname
@@ -482,7 +470,7 @@ class NetLogParser():
                 found_1st_request = False
                 requests_to_remove = []
                 for index, request in enumerate(requests):
-                    if found_1st_request == False and \
+                    if found_1st_request is False and \
                         'initiator' in request and request['initiator'] == 'not an origin':
                         requests_to_remove.append(index)
                     else:
@@ -498,7 +486,7 @@ class NetLogParser():
                 for request in requests:
                     # Only take the timing from the first remaining request and skip others
                     # TODO (AD) Review as this timing point should really be NavigationStart
-                    if self.start_time != None:
+                    if self.start_time is not None:
                         continue
                     for time_name in times:
                         if time_name in request and self.marked_start_time is None:
@@ -659,58 +647,7 @@ class NetLogParser():
                 stream['end'] = event['time']
                 if 'headers' in params:
                     stream['response_headers'] = params['headers']
-            if name == 'HTTP2_STREAM_ADOPTED_PUSH_STREAM' and 'url' in params and \
-                    'url_request' in self.netlog:
-                # Find the phantom request with the matching url and mark it
-                url = params['url'].split('#', 1)[0]
-                for request_id in self.netlog['url_request']:
-                    request = self.netlog['url_request'][request_id]
-                    if 'url' in request and url == request['url'] and 'start' not in request:
-                        request['phantom'] = True
-                        break
-        if name == 'HTTP2_SESSION_RECV_PUSH_PROMISE' and 'promised_stream_id' in params:
-            # Create a fake request to match the push
-            if 'url_request' not in self.netlog:
-                self.netlog['url_request'] = {}
-            request_id = self.netlog['next_request_id']
-            self.netlog['next_request_id'] += 1
-            self.netlog['url_request'][request_id] = {'bytes_in': 0,
-                                                      'chunks': [],
-                                                      'created': event['time']}
-            request = self.netlog['url_request'][request_id]
-            stream_id = params['promised_stream_id']
-            if stream_id not in entry['stream']:
-                entry['stream'][stream_id] = {'bytes_in': 0, 'chunks': []}
-            stream = entry['stream'][stream_id]
-            if 'headers' in params:
-                stream['request_headers'] = params['headers']
-                # synthesize a URL from the request headers
-                scheme = None
-                authority = None
-                path = None
-                for header in params['headers']:
-                    match = re.search(r':scheme: (.+)', header)
-                    if match:
-                        scheme = match.group(1)
-                    match = re.search(r':authority: (.+)', header)
-                    if match:
-                        authority = match.group(1)
-                    match = re.search(r':path: (.+)', header)
-                    if match:
-                        path = match.group(1)
-                if scheme is not None and authority is not None and path is not None:
-                    url = '{0}://{1}{2}'.format(scheme, authority, path).split('#', 1)[0]
-                    request['url'] = url
-                    stream['url'] = url
-            request['protocol'] = 'HTTP/2'
-            request['h2_session'] = session_id
-            request['stream_id'] = stream_id
-            request['start'] = event['time']
-            request['pushed'] = True
-            stream['pushed'] = True
-            stream['url_request'] = request_id
-            if 'socket' in entry:
-                request['socket'] = entry['socket']
+
         if name == 'HTTP2_SESSION_RECV_SETTING' and 'id' in params and 'value' in params:
             setting_id = None
             match = re.search(r'\d+ \((.+)\)', params['id'])
@@ -766,6 +703,9 @@ class NetLogParser():
                 if 'headers' in params:
                     stream['response_headers'] = params['headers']
 
+    # TODO (AD) This generates multiple entries for the same host, can it be simplified to only match DNS lookups
+    # For example in a NetLog for https://www.bbc.co.uk there are 12 HOST_RESOLVER_IMPL_JOB entries
+    # But this generates something like 140+ entries in netlog['dns']
     def ProcessNetlogDnsEvent(self, event):
         if 'dns' not in self.netlog:
             self.netlog['dns'] = {}
@@ -968,7 +908,7 @@ class NetLogParser():
         try:
             _, ext = os.path.splitext(out_file)
             if ext.lower() == '.gz':
-                with gzip.open(out_file, GZIP_TEXT) as f:
+                with gzip.open(out_file, 'wt') as f:
                     json.dump(json_data, f)
             else:
                 with open(out_file, 'w') as f:
@@ -997,17 +937,20 @@ def main():
 
     # Set up logging
     log_level = logging.CRITICAL
-    if options.verbose == 1:
-        log_level = logging.ERROR
-    elif options.verbose == 2:
-        log_level = logging.WARNING
-    elif options.verbose == 3:
-        log_level = logging.INFO
-    elif options.verbose >= 4:
-        log_level = logging.DEBUG
-    logging.basicConfig(
-        level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s", datefmt="%H:%M:%S")
+  
+    match options.verbose:
+        case 1:
+            log_level = logging.ERROR
+        case 2:
+            log_level = logging.WARNING
+        case 3:
+            log_level = logging.INFO 
+        case 4:
+            log_level = logging.DEBUG
+            
+    logging.basicConfig(level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s", datefmt="%H:%M:%S")
 
+    # Check input and output files are specified
     if not options.netlog: 
         parser.error("Input NetLog file is not specified.")
 

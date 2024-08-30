@@ -17,13 +17,13 @@ class Browsers(object):
         self.options = options
         self.browsers = None
         if browsers is not None:
-            self.browsers = {k.lower(): v for k, v in browsers.items()}
+            self.browsers = {k.lower(): v for k, v in list(browsers.items())}
         self.adb = adb
         self.ios = ios
         android_file = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                     'android_browsers.json')
         with open(android_file, 'r') as f_in:
-            self.android_browsers = {k.lower(): v for k, v in json.load(f_in).items()}
+            self.android_browsers = {k.lower(): v for k, v in list(json.load(f_in).items())}
 
     def is_ready(self):
         """Check to see if the configured browsers are ready to go"""
