@@ -554,7 +554,9 @@ class WebPageTest(object):
                         'page_data': {},
                         'navigated': False,
                         'page_result': None,
-                        'script_step_count': 1}
+                        'script_step_count': 1,
+                        'naive_navigation_count' : 1
+                    }
                 # Increase the activity timeout for high-latency tests
                 if 'latency' in job:
                     try:
@@ -670,6 +672,11 @@ class WebPageTest(object):
         """Build the actual script that will be used for testing"""
         task['script'] = []
         record_count = 0
+
+        # Count navigate and commands with AndWait on the end
+        # Used in front end to show / hide Lighthouse results
+        naive_navigation_count = 0
+
         # Add script commands for any static options that need them
         if 'script' in job:
             lines = job['script'].splitlines()
@@ -685,12 +692,14 @@ class WebPageTest(object):
                     if andwait > -1:
                         command = command[:andwait]
                         record = True
+                        naive_navigation_count += 1
                     # go through the known commands
                     if command == 'navigate':
                         if target is not None and target[:4] != 'http':
                             target = 'http://' + target
                         job['url'] = target
                         record = True
+                        naive_navigation_count += 1
                     elif command == 'addheader' or command == 'setheader':
                         if target is not None and len(target):
                             separator = target.find(':')
@@ -894,6 +903,7 @@ class WebPageTest(object):
             if job['url'][:4] != 'http':
                 job['url'] = 'http://' + job['url']
             record_count += 1
+            naive_navigation_count += 1
             task['script'].append({'command': 'navigate', 'target': job['url'], 'record': True})
         # Remove any spurious commands from the end of the script
         pos = len(task['script']) - 1
@@ -903,6 +913,7 @@ class WebPageTest(object):
             task['script'].pop(pos)
             pos -= 1
         task['script_step_count'] = max(record_count, 1)
+        task['naive_navigation_count'] = naive_navigation_count
         logging.debug(task['script'])
 
     def update_browser_viewport(self, task):
