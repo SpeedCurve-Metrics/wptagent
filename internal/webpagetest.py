@@ -183,10 +183,32 @@ class WebPageTest(object):
         # Make sure the route blocking isn't configured on Linux
         if platform.system() == "Linux":
             subprocess.call(['sudo', 'route', 'delete', '169.254.169.254'])
+
+        # Fetch meta data service access token
+        aws_access_token = None
+        ok = False
+        while not ok:
+            headers = {'X-aws-ec2-metadata-token-ttl-seconds': '21600'}
+            try:
+                response = session.put('http://169.254.169.254/latest/api/token', headers=headers, timeout=30, proxies=proxies)
+                if len(response.text):
+                    aws_access_token = response.text.strip()
+                    ok = True
+            except Exception:
+                pass
+            if not ok:
+                time.sleep(10)
+
+        
+        headers = {}
+        if aws_access_token is not None:
+            headers = {'X-aws-ec2-metadata-token': aws_access_token}
+
+        # Fetch instance user data
         ok = False
         while not ok:
             try:
-                response = session.get('http://169.254.169.254/latest/user-data', timeout=30, proxies=proxies)
+                response = session.get('http://169.254.169.254/latest/user-data', headers=headers, timeout=30, proxies=proxies)
                 if len(response.text):
                     self.parse_user_data(response.text)
                     ok = True
@@ -197,7 +219,7 @@ class WebPageTest(object):
         ok = False
         while not ok:
             try:
-                response = session.get('http://169.254.169.254/latest/meta-data/instance-id', timeout=30, proxies=proxies)
+                response = session.get('http://169.254.169.254/latest/meta-data/instance-id', headers=headers, timeout=30, proxies=proxies)
                 if len(response.text):
                     self.instance_id = response.text.strip()
                     ok = True
