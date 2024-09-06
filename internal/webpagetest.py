@@ -230,7 +230,7 @@ class WebPageTest(object):
         ok = False
         while not ok:
             try:
-                response = session.get('http://169.254.169.254/latest/meta-data/placement/availability-zone', timeout=30, proxies=proxies)
+                response = session.get('http://169.254.169.254/latest/meta-data/placement/availability-zone', headers=headers, timeout=30, proxies=proxies)
                 if len(response.text):
                     self.zone = response.text.strip()
                     if not len(self.test_locations):
