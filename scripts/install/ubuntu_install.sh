@@ -19,7 +19,7 @@ do
 done
 
 until sudo apt-get install -y imagemagick ffmpeg xvfb dbus-x11 cgroup-tools traceroute software-properties-common psmisc libnss3-tools iproute2 net-tools git curl \
-    wget zliblg-dev zlib1g-dev libjpeg-dev sudo kmod tcpdump bind9utils loibss3-tools nano
+    wget zlib1g-dev libjpeg-dev sudo kmod tcpdump bind9utils nano
 do
     sleep 1
 done
@@ -27,13 +27,13 @@ done
 sudo dbus-uuidgen --ensure
 
 # Setup Python, it's environment and dependencies
-until sudo apt-get install -y python python3 python3-pip python3-ujson python3-xlib
+until sudo apt-get install -y python3 python3-pip python3-venv python3-ujson python3-xlib
 do
     sleep 1
 done
 python3 -m venv /home/ubuntu/agent_env
 source /home/ubuntu/agent_env/bin/activate
-pip3 install -r /home/ubuntu/wptagent/install/requirements.txt
+pip3 install -r /home/ubuntu/wptagent/scripts/install/requirements.txt
 
 
 # Install NodeJS and Lighthouse
@@ -63,13 +63,10 @@ rm /tmp/firefox.tar.bz2
 ln -s /opt/firefox/firefox /usr/local/bin/firefox
 apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq firefox-geckodriver 
 
-
-wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
 sudo add-apt-repository -y ppa:ubuntu-mozilla-daily/ppa
 sudo add-apt-repository -y ppa:mozillateam/ppa
 sudo apt-get update
-until sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq google-chrome-stable google-chrome-beta google-chrome-unstable firefox firefox-trunk firefox-esr firefox-geckodriver
+until sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq google-chrome-beta google-chrome-unstable firefox-trunk firefox-esr firefox-geckodriver
 do
     sleep 1
 done
