@@ -66,7 +66,7 @@ sudo apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq firefo
 sudo add-apt-repository -y ppa:ubuntu-mozilla-daily/ppa
 sudo add-apt-repository -y ppa:mozillateam/ppa
 sudo apt-get update
-until sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq google-chrome-beta google-chrome-unstable firefox-trunk firefox-esr firefox-geckodriver
+until DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq google-chrome-beta google-chrome-unstable firefox-trunk firefox-esr firefox-geckodriver
 do
     sleep 1
 done
