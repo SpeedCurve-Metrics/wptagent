@@ -59,7 +59,7 @@ sudo rm /tmp/chrome.deb
 sudo wget --no-verbose -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_STABLE_VERSION}.tar.bz2
 sudo rm -rf /opt/firefox
 sudo tar -C /opt -xjf /tmp/firefox.tar.bz2
-sudp rm /tmp/firefox.tar.bz2
+sudo rm /tmp/firefox.tar.bz2
 sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
 sudo apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq firefox-geckodriver 
 
