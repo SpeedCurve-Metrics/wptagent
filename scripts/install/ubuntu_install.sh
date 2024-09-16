@@ -9,7 +9,7 @@ set -eu
 # Firefox versions: https://download-installer.cdn.mozilla.net/pub/firefox/releases/
 
 CHROME_STABLE_VERSION=126.0.6478.126-1
-FIREFOX_STABLE_VERSION=127.0.2
+FIREFOX_STABLE_VERSION=130.0
 LIGHTHOUSE_VERSION=12.1.0
 NODEJS_VERSION=20.x
 
@@ -60,13 +60,14 @@ sudo wget --no-verbose -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mo
 sudo rm -rf /opt/firefox
 sudo tar -C /opt -xjf /tmp/firefox.tar.bz2
 sudo rm /tmp/firefox.tar.bz2
-sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
-sudo apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq firefox-geckodriver 
+sudo ln -f -s /opt/firefox/firefox /usr/local/bin/firefox
+# sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq firefox-geckodriver 
 
 sudo add-apt-repository -y ppa:ubuntu-mozilla-daily/ppa
 sudo add-apt-repository -y ppa:mozillateam/ppa
 sudo apt-get update
-until DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq google-chrome-beta google-chrome-unstable firefox-trunk firefox-esr firefox-geckodriver
+until DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq google-chrome-beta google-chrome-unstable firefox-trunk firefox-esr 
+# firefox-geckodriver
 do
     sleep 1
 done
