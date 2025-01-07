@@ -598,7 +598,7 @@ class DevtoolsBrowser(object):
             json_gzip = os.path.join(task['dir'], 'lighthouse.json.gz')
             html_file = os.path.join(task['dir'], 'lighthouse.report.html')
             html_gzip = os.path.join(task['dir'], 'lighthouse.html.gz')
-            time_limit = min(int(task['time_limit']), 80)
+            time_limit = 120
             command = ['lighthouse',
                        '"{0}"'.format(self.job['url']),
                        '--channel', 'wpt',
