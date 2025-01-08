@@ -184,6 +184,9 @@ class Firefox(DesktopBrowser):
                 modified = False
                 if 'uastring' in self.job:
                     ua_string = self.job['uastring']
+                    # Replace the %BROWSER_VERSION% token with the version in ua_string
+                    if self.browser_version is not None:
+                        ua_string = ua_string.replace('%BROWSER_VERSION%', self.browser_version)
                     modified = True
                 if ua_string is not None and 'AppendUA' in task:
                     ua_string += ' ' + task['AppendUA']
