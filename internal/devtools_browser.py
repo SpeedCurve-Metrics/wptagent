@@ -161,14 +161,15 @@ class DevtoolsBrowser(object):
                     self.browser_version = match.group(1)
             if 'uastring' in self.job:
                 ua_string = self.job['uastring']
+                # Replace the %BROWSER_VERSION% token with the version in ua_string
                 if self.browser_version is not None:
-                    # Replace the %BROWSER_VERSION% token with the version in ua_string
                     ua_string = ua_string.replace('%BROWSER_VERSION%', self.browser_version)
             if ua_string is not None and 'AppendUA' in task:
                 ua_string += ' ' + task['AppendUA']
             if 'auto_mobile_ua' in self.job and self.job['auto_mobile_ua']:
                 # Attempt to automatically convert a desktop user-agent string to mobile
                 ua_string = re.sub(r'(Chrome\/\d+\.\d+\.\d+\.\d+)', r'\1 Mobile', ua_string)
+                ua_string = re.sub(r'Mozilla/5.0 \([^;]+; .+\)', 'Mozilla/5.0 (Linux; Android 10; K)', ua_string)
             if ua_string is not None:
                 self.job['user_agent_string'] = ua_string
             # Disable js
