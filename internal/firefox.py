@@ -194,7 +194,7 @@ class Firefox(DesktopBrowser):
                 if ua_string is not None and 'auto_mobile_ua' in self.job and self.job['auto_mobile_ua']:
                     # Attempt to automatically convert a desktop user-agent string to mobile
                     # Replace rv:\d with Mobile; rv:\d
-                    ua_string = re.sub(r'(rv:\d+)', r'Mobile; \1', ua_string)
+                    ua_string = re.sub(r'\(.+(rv:\d+)(.+)\)', r'(Android 14; Mobile; \1\2)', ua_string)
                     modified = True
                 if modified:
                     logging.debug(ua_string)
