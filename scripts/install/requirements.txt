@@ -8,6 +8,7 @@ mozfile
 mozrunner
 pillow
 psutil
+pyotp
 requests
 selenium
 tornado
