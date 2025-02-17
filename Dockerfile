@@ -39,8 +39,8 @@ RUN apt-get update && \
   nano
 
 # Add the ARGs here so that changing them doesn't invalidate the previous layers' cache
-ARG FIREFOX_STABLE_VERSION=127.0.2
-ARG LIGHTHOUSE_VERSION=12.1.0
+ARG FIREFOX_STABLE_VERSION=135.0.0
+ARG LIGHTHOUSE_VERSION=12.3.0
 ARG NODEJS_VERSION=20.x
 
 # Install Node.js with nvm
@@ -91,7 +91,7 @@ RUN sudo apt-get clean && \
 RUN npm install -g lighthouse@${LIGHTHOUSE_VERSION}
 
 # Install Python dependencies
-COPY ./requirements.txt /wptagent/requirements.txt
+COPY ./scripts/install/requirements.txt /wptagent/requirements.txt
 RUN python3 -m pip install --break-system-packages --upgrade --user pip && \
     python3 -m pip install --break-system-packages --user -r /wptagent/requirements.txt
 
