@@ -8,9 +8,9 @@ set -eu
 #
 # Firefox versions: https://download-installer.cdn.mozilla.net/pub/firefox/releases/
 
-CHROME_STABLE_VERSION=126.0.6478.126-1
-FIREFOX_STABLE_VERSION=130.0
-LIGHTHOUSE_VERSION=12.1.0
+CHROME_STABLE_VERSION=133.0.6943.98-1
+FIREFOX_STABLE_VERSION=135.0
+LIGHTHOUSE_VERSION=12.3.0
 NODEJS_VERSION=20.x
 
 until sudo apt-get update
@@ -100,6 +100,10 @@ net.ipv4.tcp_syn_retries = 4
 _SYSCTL_
 
 sudo sysctl -p
+
+# Disable apparmor for Chrome Beta and Canary
+echo kernel.apparmor_restrict_unprivileged_userns=0 | sudo tee /etc/sysctl.d/60-apparmor-namespace.conf
+
 
 # Copy run scripts to home directory
 cp /home/ubuntu/wptagent/scripts/run/* /home/ubuntu
