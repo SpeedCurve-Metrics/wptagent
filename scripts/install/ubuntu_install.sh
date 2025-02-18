@@ -55,12 +55,13 @@ sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /et
 sudo wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_STABLE_VERSION}_amd64.deb
 sudo apt install -y /tmp/chrome.deb
 sudo rm /tmp/chrome.deb
+
 # Firefox 
-sudo wget --no-verbose -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_STABLE_VERSION}.tar.bz2
-sudo rm -rf /opt/firefox
-sudo tar -C /opt -xjf /tmp/firefox.tar.bz2
-sudo rm /tmp/firefox.tar.bz2
-sudo ln -f -s /opt/firefox/firefox /usr/local/bin/firefox
+sudo wget --no-verbose -O /tmp/firefox.deb https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_STABLE_VERSION}.deb
+sudo apt install -y /tmp/firefox.deb
+sudo rm /tmp/firefox.deb
+
+#sudo ln -f -s /opt/firefox/firefox /usr/local/bin/firefox
 # sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq firefox-geckodriver 
 
 sudo add-apt-repository -y ppa:ubuntu-mozilla-daily/ppa
