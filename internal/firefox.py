@@ -1200,7 +1200,7 @@ class Firefox(DesktopBrowser):
             elif request['responseCode'] == 404:
                 page['responses_404'] += 1
                 page['result'] = 99999
-            elif request['responseCode'] > -1:
+            elif request['responseCode'] is not None and request['responseCode']  -1:
                 page['responses_other'] += 1
             if main_request is None and \
                     (request['responseCode'] == 200 or request['responseCode'] == 304) and \
