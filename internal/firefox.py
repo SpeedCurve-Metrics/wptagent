@@ -73,6 +73,9 @@ class Firefox(DesktopBrowser):
         self.requests = {}
         self.main_request_headers = None
 
+        # Stop Selenium sending beacons to Plausible
+        os.environ["SE_AVOID_STATS"] = "true"
+
         # TODO (AD) Review log file columns (see about:logging in Firefox)
         # Regex in firefox_log_parser will need updating to match new format
         # Suggest moving format string to log parser and importing it here instead
