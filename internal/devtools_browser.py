@@ -192,7 +192,7 @@ class DevtoolsBrowser(object):
 
         # Save count of total navigations (not just those we're recording)
         task['page_data']['debug']['rawNavigationCount'] = task['naive_navigation_count']
-        
+
         if self.devtools is not None:
             self.devtools.start_recording()
 
