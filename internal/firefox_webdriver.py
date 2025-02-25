@@ -101,7 +101,7 @@ class FirefoxWebDriver(Firefox):
                 self.driver.set_context(self.driver.CONTEXT_CHROME)
                 self.driver.execute_script(script)
             except Exception:
-                logging.exception("Error setting pref")
+                logging.exception('Error setting preference: ({0}, {1});'.format(json.dumps(key), json.dumps(value)))
             finally:
                 self.driver.set_context(self.driver.CONTEXT_CONTENT)
 

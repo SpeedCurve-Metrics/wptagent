@@ -39,7 +39,8 @@ RUN apt-get update && \
   nano
 
 # Add the ARGs here so that changing them doesn't invalidate the previous layers' cache
-ARG FIREFOX_STABLE_VERSION=135.0.0
+ARG CHROME_STABLE_VERSION=133.0.6943.98-1
+ARG FIREFOX_STABLE_VERSION=135.0
 ARG LIGHTHOUSE_VERSION=12.3.0
 ARG NODEJS_VERSION=20.x
 
@@ -71,11 +72,16 @@ RUN apt install -y /tmp/chrome-unstable.deb && \
     rm /tmp/chrome-unstable.deb
 
 # Firefox
-RUN wget -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-127.0.2.tar.bz2 && \
-  rm -rf /opt/firefox && \
-  tar -C /opt -xjf /tmp/firefox.tar.bz2 && \
-  rm /tmp/firefox.tar.bz2 && \
-  ln -s /opt/firefox/firefox /usr/local/bin/firefox
+# RUN wget -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-127.0.2.tar.bz2 && \
+#  rm -rf /opt/firefox && \
+#  tar -C /opt -xjf /tmp/firefox.tar.bz2 && \
+#  rm /tmp/firefox.tar.bz2 && \
+#  ln -s /opt/firefox/firefox /usr/local/bin/firefox
+
+RUN wget  -O /tmp/firefox.deb https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_STABLE_VERSION}.deb
+RUN apt install -y /tmp/firefox.deb && \
+    rm /tmp/firefox.deb
+
 
 # Get fonts
 RUN echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections && \

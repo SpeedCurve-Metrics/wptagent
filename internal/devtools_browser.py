@@ -154,6 +154,9 @@ class DevtoolsBrowser(object):
                     self.browser_version = match.group(1)
             if 'uastring' in self.job:
                 ua_string = self.job['uastring']
+                # Replace the %BROWSER_VERSION% token with the version in ua_string
+                if self.browser_version is not None:
+                    ua_string = ua_string.replace('%BROWSER_VERSION%', self.browser_version)
             if ua_string is not None and 'AppendUA' in task:
                 ua_string += ' ' + task['AppendUA']
             if ua_string is not None:

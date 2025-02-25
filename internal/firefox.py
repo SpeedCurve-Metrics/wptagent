@@ -2,6 +2,9 @@
 # Copyright 2017 Google Inc.
 # Use of this source code is governed by the Apache 2.0 license that can be
 # found in the LICENSE file.
+
+# Firefox error codes https://searchfox.org/mozilla-central/source/tools/ts/config/error_list.json
+
 """Support for Firefox"""
 from datetime import datetime, timedelta
 import glob
@@ -186,9 +189,16 @@ class Firefox(DesktopBrowser):
                 modified = False
                 if 'uastring' in self.job:
                     ua_string = self.job['uastring']
+                    # Replace the %BROWSER_VERSION% token with the version in ua_string
+                    if self.browser_version is not None:
+                        ua_string = ua_string.replace('%BROWSER_VERSION%', self.browser_version)
                     modified = True
                 if ua_string is not None and 'AppendUA' in task:
                     ua_string += ' ' + task['AppendUA']
+                    modified = True
+                if ua_string is not None and 'auto_mobile_ua' in self.job and self.job['auto_mobile_ua']:
+                    # Attempt to automatically convert a desktop user-agent string to mobile
+                    ua_string = re.sub(r'\(.+(rv:\d+)(.+)\)', r'(Android 14; Mobile; \1\2)', ua_string)
                     modified = True
                 if modified:
                     logging.debug(ua_string)
