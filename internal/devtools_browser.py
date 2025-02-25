@@ -12,18 +12,11 @@ import psutil
 import re
 import shutil
 import subprocess
-import sys
 import threading
 import time
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    unicode = str
-    GZIP_TEXT = 'wt'
-else:
-    from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'w'
+from time import monotonic
+from urllib.parse import urlsplit # pylint: disable=import-error
+
 try:
     import ujson as json
 except BaseException:
@@ -33,7 +26,7 @@ from .optimization_checks import OptimizationChecks
 
 class DevtoolsBrowser(object):
     """Devtools Browser base"""
-    CONNECT_TIME_LIMIT = 120
+    CONNECT_TIME_LIMIT = 30
 
     def __init__(self, options, job, use_devtools_video=True):
         self.options = options
@@ -356,12 +349,9 @@ class DevtoolsBrowser(object):
                 entry = data[key]
                 if isinstance(entry, dict) or isinstance(entry, list):
                     self.strip_non_text(entry)
-                elif isinstance(entry, str) or isinstance(entry, unicode):
+                elif isinstance(entry, str) or isinstance(entry, str):
                     try:
-                        if (sys.version_info >= (3, 0)):
-                            entry.encode('utf-8').decode('utf-8')
-                        else:
-                            entry.decode('utf-8')
+                        entry.encode('utf-8').decode('utf-8')
                     except Exception:
                         data[key] = None
                 elif isinstance(entry, bytes):
@@ -374,12 +364,9 @@ class DevtoolsBrowser(object):
                 entry = data[key]
                 if isinstance(entry, dict) or isinstance(entry, list):
                     self.strip_non_text(entry)
-                elif isinstance(entry, str) or isinstance(entry, unicode):
+                elif isinstance(entry, str) or isinstance(entry, str):
                     try:
-                        if (sys.version_info >= (3, 0)):
-                            entry.encode('utf-8').decode('utf-8')
-                        else:
-                            entry.decode('utf-8')
+                        entry.encode('utf-8').decode('utf-8')
                     except Exception:
                         data[key] = None
                 elif isinstance(entry, bytes):
@@ -410,7 +397,7 @@ class DevtoolsBrowser(object):
         user_timing = self.run_js_file('user_timing.js')
         if user_timing is not None:
             path = os.path.join(task['dir'], task['prefix'] + '_timed_events.json.gz')
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json.dumps(user_timing))
         page_data = self.run_js_file('page_data.js')
         if page_data is not None:
@@ -420,7 +407,7 @@ class DevtoolsBrowser(object):
             requests = None
             bodies = None
             for name in self.job['customMetrics']:
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)
@@ -438,7 +425,7 @@ class DevtoolsBrowser(object):
                 script = 'var wptCustomMetric = function() {' + custom_script + '};try{wptCustomMetric();}catch(e){};'
                 custom_metrics[name] = self.devtools.execute_js(script)
             path = os.path.join(task['dir'], task['prefix'] + '_metrics.json.gz')
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json.dumps(custom_metrics))
         if 'heroElementTimes' in self.job and self.job['heroElementTimes']:
             hero_elements = None
@@ -452,7 +439,7 @@ class DevtoolsBrowser(object):
             if hero_elements is not None:
                 logging.debug('Hero Elements: %s', json.dumps(hero_elements))
                 path = os.path.join(task['dir'], task['prefix'] + '_hero_elements.json.gz')
-                with gzip.open(path, GZIP_TEXT, 7) as outfile:
+                with gzip.open(path, 'wt', 7) as outfile:
                     outfile.write(json.dumps(hero_elements))
 
 
@@ -589,7 +576,7 @@ class DevtoolsBrowser(object):
         proc = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
         for line in iter(proc.stderr.readline, b''):
             try:
-                line = unicode(line,errors='ignore')
+                line = str(line,errors='ignore')
                 logging.debug(line.rstrip())
                 self.task['lighthouse_log'] += line
             except Exception:
@@ -669,7 +656,7 @@ class DevtoolsBrowser(object):
                             if trace is not None and 'traceEvents' in trace:
                                 lighthouse_trace = os.path.join(task['dir'],
                                                                 'lighthouse_trace.json.gz')
-                            with gzip.open(lighthouse_trace, GZIP_TEXT, 7) as f_out:
+                            with gzip.open(lighthouse_trace, 'wt', 7) as f_out:
                                 f_out.write('{"traceEvents":[{}')
                                 for trace_event in trace['traceEvents']:
                                     f_out.write(",\n")
@@ -747,7 +734,7 @@ class DevtoolsBrowser(object):
                                 elif 'numericValue' in audit:
                                     audits[name] = audit['numericValue']
                     audits_gzip = os.path.join(task['dir'], 'lighthouse_audits.json.gz')
-                    with gzip.open(audits_gzip, GZIP_TEXT, 7) as f_out:
+                    with gzip.open(audits_gzip, 'wt', 7) as f_out:
                         json.dump(audits, f_out)
             # Compress the HTML lighthouse report
             if os.path.isfile(html_file):

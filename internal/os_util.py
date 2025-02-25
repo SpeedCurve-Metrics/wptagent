@@ -52,9 +52,12 @@ def flush_dns():
         subprocess.call(['sudo', 'dscacheutil', '-flushcache'])
         subprocess.call(['sudo', 'lookupd', '-flushcache'])
     elif plat == "Linux":
-        subprocess.call(['sudo', 'service', 'dnsmasq', 'restart'])
-        subprocess.call(['sudo', 'rndc', 'restart'])
-        subprocess.call(['sudo', 'systemd-resolve', '--flush-caches'])
+#        subprocess.call(['sudo', 'service', 'dnsmasq', 'restart'])
+#        subprocess.call(['sudo', 'rndc', 'restart'])
+#        subprocess.call(['sudo', 'systemd-resolve', '--flush-caches'])
+        # Ubuntu 22.04
+        subprocess.call(['sudo', 'resolvectl', 'flush-caches'])
+        
 
 # pylint: disable=E0611,E0401
 def run_elevated(command, args, wait=True):
@@ -124,6 +127,6 @@ def get_file_version(filename):
         ms = info['FileVersionMS']
         ls = info['FileVersionLS']
         version = '{0}.{1}.{2}.{3}'.format(HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls))
-    except:
+    except Exception:
         logging.exception('Error getting file version for %s', filename)
     return version

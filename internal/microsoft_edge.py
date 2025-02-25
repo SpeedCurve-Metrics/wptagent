@@ -4,7 +4,6 @@
 # found in the LICENSE file.
 """Microsoft Edge testing"""
 from datetime import datetime, timedelta
-import glob
 import gzip
 import io
 import logging
@@ -12,17 +11,11 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import time
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    unicode = str
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'wt'
-else:
-    from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'w'
+from time import monotonic
+from urllib.parse import urlsplit # pylint: disable=import-error
+
+
 try:
     import ujson as json
 except BaseException:
@@ -84,17 +77,17 @@ class Edge(DesktopBrowser):
         if not os.path.isdir(self.bodies_path):
             os.makedirs(self.bodies_path)
         try:
-            import _winreg # pylint: disable=import-error
-            registry_key = _winreg.CreateKeyEx(_winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, _winreg.KEY_READ | _winreg.KEY_WRITE)
-            self.edge_registry_key_value = _winreg.QueryValueEx(registry_key, "ClearBrowsingHistoryOnExit")[0]
+            import winreg # pylint: disable=import-error
+            registry_key = winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, winreg.KEY_READ | winreg.KEY_WRITE)
+            self.edge_registry_key_value = winreg.QueryValueEx(registry_key, "ClearBrowsingHistoryOnExit")[0]
             if not task['cached']:
                 self.clear_cache()
             if task['cached'] or job['fvonly']:
-                _winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, _winreg.REG_DWORD, 1)
-                _winreg.CloseKey(registry_key)
+                winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, winreg.REG_DWORD, 1)
+                winreg.CloseKey(registry_key)
             else:
-                _winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, _winreg.REG_DWORD, 0)
-                _winreg.CloseKey(registry_key)
+                winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, winreg.REG_DWORD, 0)
+                winreg.CloseKey(registry_key)
         except Exception as err:
             logging.exception("Error clearing cache: %s", str(err))
         DesktopBrowser.prepare(self, job, task)
@@ -216,10 +209,10 @@ class Edge(DesktopBrowser):
                 except Exception:
                     pass
         try:
-            import _winreg # pylint: disable=import-error
-            registry_key = _winreg.CreateKeyEx(_winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, _winreg.KEY_WRITE)
-            _winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, _winreg.REG_DWORD, self.edge_registry_key_value)
-            _winreg.CloseKey(registry_key)        
+            import winreg # pylint: disable=import-error
+            registry_key = winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, self.edge_registry_path, 0, winreg.KEY_WRITE)
+            winreg.SetValueEx(registry_key, "ClearBrowsingHistoryOnExit", 0, winreg.REG_DWORD, self.edge_registry_key_value)
+            winreg.CloseKey(registry_key)        
         except Exception as err:
             logging.exception("Error resetting Edge cache settings: %s", str(err)) 
         self.kill()
@@ -416,7 +409,7 @@ class Edge(DesktopBrowser):
                     message['data']['Markup'] in self.CMarkup:
                 logging.debug("Injecting script: \n%s", self.job['injectScript'])
                 self.execute_js(self.job['injectScript'])
-            tid = message['data']['EventContextId']  if 'EventContextId' in message['data'] else  message['tid'];
+            tid = message['data']['EventContextId']  if 'EventContextId' in message['data'] else  message['tid']
             if  tid in self.pageContexts:
                 if message['Event'] == 'Mshtml_WebOCEvents_DocumentComplete':
                     if 'CMarkup' in message['data'] and message['data']['CMarkup'] in self.CMarkup:
@@ -466,7 +459,7 @@ class Edge(DesktopBrowser):
                 self.page['start'] = message['ts']
             if 'data' in message and 'AddressList' in message['data']:
                 self.dns[event_id]['addresses'] = list(
-                    filter(None, message['data']['AddressList'].split(';')))
+                    [_f for _f in message['data']['AddressList'].split(';') if _f])
         if message['Event'] == 'Wininet_Getaddrinfo/Start' and event_id in self.dns:
             if 'start' not in self.page:
                 self.page['start'] = message['ts']
@@ -698,7 +691,7 @@ class Edge(DesktopBrowser):
         user_timing = self.run_js_file('user_timing.js')
         if user_timing is not None:
             path = os.path.join(task['dir'], task['prefix'] + '_timed_events.json.gz')
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json.dumps(user_timing))
         logging.debug("Collecting page-level metrics")
         page_data = self.run_js_file('page_data.js')
@@ -711,7 +704,7 @@ class Edge(DesktopBrowser):
             bodies = None
             for name in self.job['customMetrics']:
                 logging.debug("Collecting custom metric %s", name)
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)
@@ -734,7 +727,7 @@ class Edge(DesktopBrowser):
                 except Exception:
                     logging.exception('Error collecting custom metric')
             path = os.path.join(task['dir'], task['prefix'] + '_metrics.json.gz')
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json.dumps(custom_metrics))
         if 'heroElementTimes' in self.job and self.job['heroElementTimes']:
             hero_elements = None
@@ -748,7 +741,7 @@ class Edge(DesktopBrowser):
             hero_elements = self.execute_js(script)
             if hero_elements is not None:
                 path = os.path.join(task['dir'], task['prefix'] + '_hero_elements.json.gz')
-                with gzip.open(path, GZIP_TEXT, 7) as outfile:
+                with gzip.open(path, 'wt', 7) as outfile:
                     outfile.write(json.dumps(hero_elements))
         # Wait for the interactive periods to be written
         if self.supports_interactive:
@@ -762,7 +755,7 @@ class Edge(DesktopBrowser):
             if interactive is not None and len(interactive):
                 interactive_file = os.path.join(task['dir'],
                                                 task['prefix'] + '_interactive.json.gz')
-                with gzip.open(interactive_file, GZIP_TEXT, 7) as f_out:
+                with gzip.open(interactive_file, 'wt', 7) as f_out:
                     f_out.write(interactive)
 
     def prepare_task(self, task):
@@ -964,7 +957,7 @@ class Edge(DesktopBrowser):
         result['pageData'] = self.calculate_page_stats(result['requests'])
         self.check_optimization(task, result['requests'], result['pageData'])
         devtools_file = os.path.join(task['dir'], task['prefix'] + '_devtools_requests.json.gz')
-        with gzip.open(devtools_file, GZIP_TEXT, 7) as f_out:
+        with gzip.open(devtools_file, 'wt', 7) as f_out:
             json.dump(result, f_out)
 
     def process_sockets(self):

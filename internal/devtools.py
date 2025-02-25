@@ -2,8 +2,12 @@
 # Copyright 2017 Google Inc.
 # Use of this source code is governed by the Apache 2.0 license that can be
 # found in the LICENSE file.
-"""Main entry point for interfacing with Chrome's remote debugging protocol"""
-"""Protocol docs: https://chromedevtools.github.io/devtools-protocol/"""
+"""
+Main entry point for interfacing with Chrome's remote debugging protocol
+
+Protocol docs: https://chromedevtools.github.io/devtools-protocol/
+"""
+
 import base64
 import gzip
 import logging
@@ -11,18 +15,11 @@ import multiprocessing
 import os
 import re
 import subprocess
-import sys
 import time
 import zipfile
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    unicode = str
-    GZIP_TEXT = 'wt'
-else:
-    from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'w'
+from time import monotonic
+from urllib.parse import urlsplit # pylint: disable=import-error
+
 try:
     import ujson as json
 except BaseException:
@@ -407,7 +404,7 @@ class DevTools(object):
                                         summary[url]['{0}_bytes_used'.format(category)] = used_bytes
                                         summary[url]['{0}_percent_used'.format(category)] = used_pct
                         path = self.path_base + '_coverage.json.gz'
-                        with gzip.open(path, GZIP_TEXT, 7) as f_out:
+                        with gzip.open(path, 'wt', 7) as f_out:
                             json.dump(summary, f_out)
                     self.send_command('CSS.disable', {})
                     self.send_command('DOM.disable', {})
@@ -1295,7 +1292,7 @@ class DevTools(object):
         if self.task['log_data']:
             if self.dev_tools_file is None:
                 path = self.path_base + '_devtools.json.gz'
-                self.dev_tools_file = gzip.open(path, GZIP_TEXT, 7)
+                self.dev_tools_file = gzip.open(path, 'wt', 7)
                 self.dev_tools_file.write("[{}")
             if self.dev_tools_file is not None:
                 self.dev_tools_file.write(",\n")
@@ -1477,8 +1474,7 @@ class DevToolsClient(WebSocketClient):
         """Process Tracing.* dev tools events"""
         if 'params' in msg and 'value' in msg['params'] and len(msg['params']['value']):
             if self.trace_file is None and self.keep_timeline:
-                self.trace_file = gzip.open(self.path_base + '_trace.json.gz',
-                                            GZIP_TEXT, compresslevel=7)
+                self.trace_file = gzip.open(self.path_base + '_trace.json.gz', 'wt', compresslevel=7)
                 self.trace_file.write('{"traceEvents":[{}')
             if self.trace_parser is None:
                 from internal.support.trace_parser import Trace

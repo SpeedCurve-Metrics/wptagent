@@ -26,6 +26,8 @@ These are processed by
 
 Each of these can be run as standalone CLI tools - see the code for the list of arguments
 
+
+
 ### Network Request Data
 
 #### Chrome
@@ -87,3 +89,9 @@ Comparisons between the URL and the URL Pattern are made using [urlmatch](https:
 *://*/* will match all requests
 https://*.speedcurve.com/* will match all requests to https://www.speedcurve.com, https://app.speedcurve.com etc
 https://www.speedcurve.com will only match request to https://www.speedcurve.com/ and won't match https://www.speedcurve.com/some-path 
+
+
+
+## Installation Notes
+
+On Ubuntu 24.04 Chrome Beta and Canary will encounter AppArmour restrictions: https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md

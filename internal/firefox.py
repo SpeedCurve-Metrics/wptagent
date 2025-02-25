@@ -2,6 +2,9 @@
 # Copyright 2017 Google Inc.
 # Use of this source code is governed by the Apache 2.0 license that can be
 # found in the LICENSE file.
+
+# Firefox error codes https://searchfox.org/mozilla-central/source/tools/ts/config/error_list.json
+
 """Support for Firefox"""
 from datetime import datetime, timedelta
 import glob
@@ -13,17 +16,10 @@ import platform
 import re
 import shutil
 import subprocess
-import sys
 import time
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    unicode = str
-    from urllib.parse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'wt'
-else:
-    from monotonic import monotonic
-    from urlparse import urlsplit # pylint: disable=import-error
-    GZIP_TEXT = 'w'
+from time import monotonic
+from urllib.parse import urlsplit # pylint: disable=import-error
+
 try:
     import ujson as json
 except BaseException:
@@ -69,7 +65,8 @@ class Firefox(DesktopBrowser):
             "shavar.services.mozilla.com",
             "firefox.settings.services.mozilla.com",
             "snippets.cdn.mozilla.net",
-            "content-signature-2.cdn.mozilla.net"]
+            "content-signature-2.cdn.mozilla.net",
+            "detectportal.firefox.com"]
 
     def prepare(self, job, task):
         """Prepare the profile/OS for the browser"""
@@ -78,8 +75,16 @@ class Firefox(DesktopBrowser):
         self.page = {}
         self.requests = {}
         self.main_request_headers = None
+
+        # Stop Selenium sending beacons to Plausible
+        os.environ["SE_AVOID_STATS"] = "true"
+
+        # TODO (AD) Review log file columns (see about:logging in Firefox)
+        # Regex in firefox_log_parser will need updating to match new format
+        # Suggest moving format string to log parser and importing it here instead
+
         os.environ["MOZ_LOG_FILE"] = self.moz_log
-        moz_log_env = 'timestamp,nsHttp:{0:d},nsSocketTransport:{0:d}'\
+        moz_log_env = 'timestamp,nsHttp:{0:d},nsSocketTransport:{0:d},'\
                       'nsHostResolver:{0:d},pipnss:5'.format(self.log_level)
         os.environ["MOZ_LOG"] = moz_log_env
         logging.debug('MOZ_LOG = %s', moz_log_env)
@@ -461,7 +466,7 @@ class Firefox(DesktopBrowser):
         user_timing = self.run_js_file('user_timing.js')
         if user_timing is not None:
             path = os.path.join(task['dir'], task['prefix'] + '_timed_events.json.gz')
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json.dumps(user_timing))
         logging.debug("Collecting page-level metrics")
         page_data = self.run_js_file('page_data.js')
@@ -473,7 +478,7 @@ class Firefox(DesktopBrowser):
             bodies = None
             for name in self.job['customMetrics']:
                 logging.debug("Collecting custom metric %s", name)
-                custom_script = unicode(self.job['customMetrics'][name])
+                custom_script = str(self.job['customMetrics'][name])
                 if custom_script.find('$WPT_REQUESTS') >= 0:
                     if requests is None:
                         requests = self.get_sorted_requests_json(False)
@@ -496,7 +501,7 @@ class Firefox(DesktopBrowser):
                 except Exception:
                     logging.exception('Error collecting custom metrics')
             path = os.path.join(task['dir'], task['prefix'] + '_metrics.json.gz')
-            with gzip.open(path, GZIP_TEXT, 7) as outfile:
+            with gzip.open(path, 'wt', 7) as outfile:
                 outfile.write(json.dumps(custom_metrics))
         if 'heroElementTimes' in self.job and self.job['heroElementTimes']:
             hero_elements = None
@@ -510,7 +515,7 @@ class Firefox(DesktopBrowser):
             hero_elements = self.execute_js(script)
             if hero_elements is not None:
                 path = os.path.join(task['dir'], task['prefix'] + '_hero_elements.json.gz')
-                with gzip.open(path, GZIP_TEXT, 7) as outfile:
+                with gzip.open(path, 'wt', 7) as outfile:
                     outfile.write(json.dumps(hero_elements))
 
     def process_message(self, message):
@@ -720,7 +725,7 @@ class Firefox(DesktopBrowser):
         # Write out the long tasks
         try:
             long_tasks_file = os.path.join(task['dir'], task['prefix'] + '_long_tasks.json.gz')
-            with gzip.open(long_tasks_file, GZIP_TEXT, 7) as f_out:
+            with gzip.open(long_tasks_file, 'wt', 7) as f_out:
                 f_out.write(json.dumps(self.long_tasks))
         except Exception:
             logging.exception("Error writing the long tasks")
@@ -733,7 +738,7 @@ class Firefox(DesktopBrowser):
             test_end = int((monotonic() - task['run_start_time']) * 1000)
             interactive_periods.append([last_end, test_end])
             interactive_file = os.path.join(task['dir'], task['prefix'] + '_interactive.json.gz')
-            with gzip.open(interactive_file, GZIP_TEXT, 7) as f_out:
+            with gzip.open(interactive_file, 'wt', 7) as f_out:
                 f_out.write(json.dumps(interactive_periods))
         except Exception:
             logging.exception("Error writing the interactive periods")
@@ -778,12 +783,17 @@ class Firefox(DesktopBrowser):
             start_time = task['start_time'].strftime('%Y-%m-%d %H:%M:%S.%f')
             logging.debug('Parsing moz logs relative to %s start time', start_time)
             request_timings = parser.process_logs(task['moz_log'], start_time)
-            files = sorted(glob.glob(task['moz_log'] + '*'))
-            for path in files:
-                try:
-                    os.remove(path)
-                except Exception:
-                    pass
+
+            # Clean up network log files when debug is not enabled
+            # May need to change this so we always delete but handy to keep in short term
+            if 'debug' not in self.job or not self.job['debug']:
+                files = sorted(glob.glob(task['moz_log'] + '*'))
+                for path in files:
+                    try:
+                         os.remove(path)
+                    except Exception:
+                        pass
+
         # Build the request and page data
         if len(request_timings) and task['current_step'] >= 1:
             self.adjust_timings(request_timings)
@@ -941,7 +951,7 @@ class Firefox(DesktopBrowser):
         result['requests'] = self.merge_requests(request_timings)
         result['pageData'] = self.calculate_page_stats(result['requests'])
         devtools_file = os.path.join(task['dir'], task['prefix'] + '_devtools_requests.json.gz')
-        with gzip.open(devtools_file, GZIP_TEXT, 7) as f_out:
+        with gzip.open(devtools_file, 'wt', 7) as f_out:
             json.dump(result, f_out)
 
     def get_empty_request(self, request_id, url):
@@ -1203,7 +1213,7 @@ class Firefox(DesktopBrowser):
             elif request['responseCode'] == 404:
                 page['responses_404'] += 1
                 page['result'] = 99999
-            elif request['responseCode'] > -1:
+            elif request['responseCode'] is not None and request['responseCode']  -1:
                 page['responses_other'] += 1
             if main_request is None and \
                     (request['responseCode'] == 200 or request['responseCode'] == 304) and \

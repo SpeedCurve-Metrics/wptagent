@@ -9,23 +9,18 @@ import logging
 import multiprocessing
 import os
 import platform
+import pyotp
 import re
 import shutil
 import socket
 import subprocess
-import sys
 import threading
 import time
 import zipfile
 import psutil
-if (sys.version_info >= (3, 0)):
-    from time import monotonic
-    from urllib.parse import quote_plus # pylint: disable=import-error
-    GZIP_READ_TEXT = 'rt'
-else:
-    from monotonic import monotonic
-    from urllib import quote_plus # pylint: disable=import-error,no-name-in-module
-    GZIP_READ_TEXT = 'r'
+from time import monotonic
+from urllib.parse import quote_plus # pylint: disable=import-error
+
 try:
     import ujson as json
 except BaseException:
@@ -130,10 +125,7 @@ class WebPageTest(object):
         self.version = '23.09'
         try:
             directory = os.path.abspath(os.path.dirname(__file__))
-            if (sys.version_info >= (3, 0)):
-                out = subprocess.check_output('git log -1 --format=%cd --date=raw', shell=True, cwd=directory, encoding='UTF-8')
-            else:
-                out = subprocess.check_output('git log -1 --format=%cd --date=raw', shell=True, cwd=directory)
+            out = subprocess.check_output('git log -1 --format=%cd --date=raw', shell=True, cwd=directory, encoding='UTF-8')
             if out is not None:
                 matches = re.search(r'^(\d+)', out)
                 if matches:
@@ -192,10 +184,32 @@ class WebPageTest(object):
         # Make sure the route blocking isn't configured on Linux
         if platform.system() == "Linux":
             subprocess.call(['sudo', 'route', 'delete', '169.254.169.254'])
+
+        # Fetch meta data service access token
+        aws_access_token = None
+        ok = False
+        while not ok:
+            headers = {'X-aws-ec2-metadata-token-ttl-seconds': '21600'}
+            try:
+                response = session.put('http://169.254.169.254/latest/api/token', headers=headers, timeout=30, proxies=proxies)
+                if len(response.text):
+                    aws_access_token = response.text.strip()
+                    ok = True
+            except Exception:
+                pass
+            if not ok:
+                time.sleep(10)
+
+        
+        headers = {}
+        if aws_access_token is not None:
+            headers = {'X-aws-ec2-metadata-token': aws_access_token}
+
+        # Fetch instance user data
         ok = False
         while not ok:
             try:
-                response = session.get('http://169.254.169.254/latest/user-data', timeout=30, proxies=proxies)
+                response = session.get('http://169.254.169.254/latest/user-data', headers=headers, timeout=30, proxies=proxies)
                 if len(response.text):
                     self.parse_user_data(response.text)
                     ok = True
@@ -206,7 +220,7 @@ class WebPageTest(object):
         ok = False
         while not ok:
             try:
-                response = session.get('http://169.254.169.254/latest/meta-data/instance-id', timeout=30, proxies=proxies)
+                response = session.get('http://169.254.169.254/latest/meta-data/instance-id', headers=headers, timeout=30, proxies=proxies)
                 if len(response.text):
                     self.instance_id = response.text.strip()
                     ok = True
@@ -217,7 +231,7 @@ class WebPageTest(object):
         ok = False
         while not ok:
             try:
-                response = session.get('http://169.254.169.254/latest/meta-data/placement/availability-zone', timeout=30, proxies=proxies)
+                response = session.get('http://169.254.169.254/latest/meta-data/placement/availability-zone', headers=headers, timeout=30, proxies=proxies)
                 if len(response.text):
                     self.zone = response.text.strip()
                     if not len(self.test_locations):
@@ -417,7 +431,7 @@ class WebPageTest(object):
             if 'collectversion' in self.options and \
                     self.options.collectversion:
                 versions = []
-                for name in browsers.keys():
+                for name in list(browsers.keys()):
                     if 'version' in browsers[name]:
                         versions.append('{0}:{1}'.format(name, \
                                 browsers[name]['version']))
@@ -563,7 +577,9 @@ class WebPageTest(object):
                         'page_data': {},
                         'navigated': False,
                         'page_result': None,
-                        'script_step_count': 1}
+                        'script_step_count': 1,
+                        'naive_navigation_count' : 1
+                    }
                 # Increase the activity timeout for high-latency tests
                 if 'latency' in job:
                     try:
@@ -679,9 +695,11 @@ class WebPageTest(object):
         """Build the actual script that will be used for testing"""
         task['script'] = []
         record_count = 0
+
         # Count navigate and commands with AndWait on the end
         # Used in front end to show / hide Lighthouse results
         naive_navigation_count = 0
+
         # Add script commands for any static options that need them
         if 'script' in job:
             lines = job['script'].splitlines()
@@ -854,7 +872,7 @@ class WebPageTest(object):
                                     task['dns_override'].append([target, addr])
                     # Commands that get translated into exec commands
                     elif command in ['click', 'selectvalue', 'sendclick', 'setinnerhtml',
-                                     'setinnertext', 'setvalue', 'setvalueex', 'submitform']:
+                                     'setinnertext', 'setvalue', 'setvalueex', 'setotpvalue', 'submitform']:
                         if target is not None:
                             # convert the selector into a querySelector
                             separator = target.find('=')
@@ -880,6 +898,15 @@ class WebPageTest(object):
                                     script = '(function(){el = ' + script + ';'
                                     script += 'proto = Object.getPrototypeOf(el); set = Object.getOwnPropertyDescriptor(proto, "value").set;'
                                     script += 'set.call(el, "{0}");'.format(value.replace('"', '\\"'))
+                                    script += 'el.dispatchEvent(new Event("input", { bubbles: true }));'
+                                    script += 'el.dispatchEvent(new Event("change", { bubbles: true }));'
+                                    script += '})();'
+                                elif command == 'setotpvalue' and value is not None:
+                                    totp = pyotp.TOTP(value)
+                                    otp = totp.now()
+                                    script = '(function(){el = ' + script + ';'
+                                    script += 'proto = Object.getPrototypeOf(el); set = Object.getOwnPropertyDescriptor(proto, "value").set;'
+                                    script += 'set.call(el, "{0}");'.format(otp)
                                     script += 'el.dispatchEvent(new Event("input", { bubbles: true }));'
                                     script += 'el.dispatchEvent(new Event("change", { bubbles: true }));'
                                     script += '})();'
@@ -996,7 +1023,7 @@ class WebPageTest(object):
             path = os.path.join(task['dir'], 'bodies')
             requests = []
             devtools_file = os.path.join(task['dir'], task['prefix'] + '_devtools_requests.json.gz')
-            with gzip.open(devtools_file, GZIP_READ_TEXT) as f_in:
+            with gzip.open(devtools_file, 'rt') as f_in:
                 requests = json.load(f_in)
             count = 0
             bodies_zip = path_base + '_bodies.zip'
@@ -1187,7 +1214,7 @@ class WebPageTest(object):
                             needs_zip.append({'path': filepath, 'name': filename})
                 # Zip the remaining files
                 if len(needs_zip):
-                    zip_path = os.path.join(task['dir'], "result.zip")
+                    zip_path = os.path.join(task['dir'], 'result.zip')
                     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zip_file:
                         for zipitem in needs_zip:
                             logging.debug('Storing %s (%d bytes)', zipitem['name'],
@@ -1224,7 +1251,7 @@ class WebPageTest(object):
         # pass the data fields as query params and any files as post data
         url += "?"
         for key in data:
-            if data[key] != None:
+            if data[key] is not None:
                 url += key + '=' + quote_plus(data[key]) + '&'
         logging.debug(url)
         try:

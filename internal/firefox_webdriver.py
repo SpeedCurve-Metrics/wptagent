@@ -2,14 +2,14 @@
 # Copyright 2017 Google Inc.
 # Use of this source code is governed by the Apache 2.0 license that can be
 # found in the LICENSE file.
+
+# FF command line args: https://wiki.mozilla.org/Firefox/CommandLineOptions
+
 """Support for Firefox"""
 import logging
 import os
 import re
-import sys
 
-if (sys.version_info >= (3, 0)):
-    unicode = str
 try:
     import ujson as json
 except BaseException:
@@ -28,13 +28,17 @@ class FirefoxWebDriver(Firefox):
         """Start Firefox using WebDriver"""
         from selenium import webdriver # pylint: disable=import-error
 
+        # TODO (AD) do we need to still copy the default capabilities?
         capabilities = webdriver.DesiredCapabilities.FIREFOX.copy()
-        if 'ignoreSSL' in job and job['ignoreSSL']:
-            capabilities['acceptInsecureCerts'] = True
-        else:
-            capabilities['acceptInsecureCerts'] = False
 
-        capabilities['moz:firefoxOptions'] = {
+        options = webdriver.FirefoxOptions()
+
+        if 'ignoreSSL' in job and job['ignoreSSL']:
+            options.set_capability('acceptInsecureCerts', True)
+        else:
+            options.set_capability('acceptInsecureCerts', False)
+
+        options.set_capability('moz:firefoxOptions', {
             'binary': self.path,
             'args': ['-profile', task['profile']],
             'prefs': self.prepare_prefs(),
@@ -43,10 +47,12 @@ class FirefoxWebDriver(Firefox):
                 "MOZ_LOG_FILE": os.environ["MOZ_LOG_FILE"],
                 "MOZ_LOG": os.environ["MOZ_LOG"]
             }
-        }
-        service_args = ["--marionette-port", "2828"]
+        })
 
-        self.driver = webdriver.Firefox(desired_capabilities=capabilities, service_args=service_args)
+        service_args = ["--marionette-port", "2828"]
+        service = webdriver.FirefoxService(service_args=service_args)
+
+        self.driver = webdriver.Firefox(options=options, service=service)
         logging.debug(self.driver.capabilities)
 
         self.driver.set_page_load_timeout(task['time_limit'])
@@ -86,7 +92,7 @@ class FirefoxWebDriver(Firefox):
                 script += 'Services.prefs.'
                 if isinstance(value, bool):
                     script += 'setBoolPref'
-                elif isinstance(value, (str, unicode)):
+                elif isinstance(value, str):
                     script += 'setStringPref'
                 else:
                     script += 'setIntPref'
@@ -95,7 +101,7 @@ class FirefoxWebDriver(Firefox):
                 self.driver.set_context(self.driver.CONTEXT_CHROME)
                 self.driver.execute_script(script)
             except Exception:
-                logging.exception("Error setting pref")
+                logging.exception('Error setting preference: ({0}, {1});'.format(json.dumps(key), json.dumps(value)))
             finally:
                 self.driver.set_context(self.driver.CONTEXT_CONTENT)
 
