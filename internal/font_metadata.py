@@ -5,7 +5,6 @@
 """Extract metadata from OpenType fonts."""
 
 from fontTools.ttLib import TTFont
-import functools
 import logging
 
 
@@ -22,7 +21,7 @@ def _safe_result_type(v):
 
 
 def _safe_map(m):
-    return {k: v for k, v in m.items() if _safe_result_type(v)}
+    return {k: v for k, v in list(m.items()) if _safe_result_type(v)}
 
 
 def _read_names(ttf, name_ids):
@@ -86,8 +85,16 @@ def _read_fvar(ttf):
 def _read_codepoint_glyph_counts(ttf):
     try:
         glyph_count = len(ttf.getGlyphOrder())
-        unicode_cmaps = (t.cmap.keys() for t in ttf['cmap'].tables if t.isUnicode())
-        unique_codepoints = functools.reduce(lambda acc, u: acc | u, unicode_cmaps, set())
+        
+        # Create list of all unicode codepoints in font
+        unicode_cmaps = list()
+        for table in ttf['cmap'].tables:
+            if table.isUnicode():
+                unicode_cmaps.extend(list(table.cmap.keys()))
+
+        # Use set to remove duplicates
+        unique_codepoints = set(unicode_cmaps)
+
         return {
             'num_cmap_codepoints': len(unique_codepoints),
             'num_glyphs': glyph_count
@@ -102,7 +109,7 @@ def read_metadata(font):
     try:
         ttf.getGlyphNames()
     except Exception:
-        logging.error('Not a vaild font: ' + request['url'])
+        logging.error('Not a vaild font: ' + font)
         return None
     reader = ttf.reader
 
@@ -118,7 +125,7 @@ def read_metadata(font):
     }
     ttf.close()
 
-    return {k: v for k,v in metadata.items() if v is not None}
+    return {k: v for k,v in list(metadata.items()) if v is not None}
 
 
 def main():

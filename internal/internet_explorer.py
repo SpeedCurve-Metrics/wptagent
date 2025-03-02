@@ -39,25 +39,25 @@ class InternetExplorer(Edge):
     def prepare(self, job, task):
         Edge.prepare(self, job, task)
         try:
-            import _winreg
+            import winreg
             reg_path = 'Software\\Microsoft\\Windows\\CurrentVersion\\' \
                        'Internet Settings\\5.0\\User Agent\\Post Platform'
-            key = _winreg.CreateKey(_winreg.HKEY_CURRENT_USER, reg_path)
+            key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, reg_path)
             # Delete any string modifiers currently in the registry
             values = []
             try:
                 index = 0
                 while True and index < 10000:
-                    value = _winreg.EnumValue(key, index)
+                    value = winreg.EnumValue(key, index)
                     values.append(value[0])
                     index += 1
             except Exception:
                 logging.exception('Error processing registry')
             for value in values:
-                _winreg.DeleteValue(key, value)
+                winreg.DeleteValue(key, value)
             if 'AppendUA' in task and len(task['AppendUA']):
-                _winreg.SetValueEx(key, task['AppendUA'], 0,
-                                   _winreg.REG_SZ, 'IEAK')
+                winreg.SetValueEx(key, task['AppendUA'], 0,
+                                   winreg.REG_SZ, 'IEAK')
         except Exception:
             logging.exception('Error writing registry key')
 
