@@ -320,7 +320,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
             logging.debug('Compressing netlog')
             netlog_gzip = self.netlog_file + '.gz'
             with open(self.netlog_file, 'rb') as f_in:
-                with gzip.open(netlog_gzip, 'wb', 7) as f_out:
+                with gzip.open(netlog_gzip, 'wb', 9) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             if os.path.isfile(netlog_gzip):
                 os.remove(self.netlog_file)

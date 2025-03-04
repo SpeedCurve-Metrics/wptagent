@@ -466,7 +466,7 @@ class Firefox(DesktopBrowser):
         user_timing = self.run_js_file('user_timing.js')
         if user_timing is not None:
             path = os.path.join(task['dir'], task['prefix'] + '_timed_events.json.gz')
-            with gzip.open(path, 'wt', 7) as outfile:
+            with gzip.open(path, 'wt', 9) as outfile:
                 outfile.write(json.dumps(user_timing))
         logging.debug("Collecting page-level metrics")
         page_data = self.run_js_file('page_data.js')
@@ -501,7 +501,7 @@ class Firefox(DesktopBrowser):
                 except Exception:
                     logging.exception('Error collecting custom metrics')
             path = os.path.join(task['dir'], task['prefix'] + '_metrics.json.gz')
-            with gzip.open(path, 'wt', 7) as outfile:
+            with gzip.open(path, 'wt', 9) as outfile:
                 outfile.write(json.dumps(custom_metrics))
         if 'heroElementTimes' in self.job and self.job['heroElementTimes']:
             hero_elements = None
@@ -515,7 +515,7 @@ class Firefox(DesktopBrowser):
             hero_elements = self.execute_js(script)
             if hero_elements is not None:
                 path = os.path.join(task['dir'], task['prefix'] + '_hero_elements.json.gz')
-                with gzip.open(path, 'wt', 7) as outfile:
+                with gzip.open(path, 'wt', 9) as outfile:
                     outfile.write(json.dumps(hero_elements))
 
     def process_message(self, message):
@@ -725,7 +725,7 @@ class Firefox(DesktopBrowser):
         # Write out the long tasks
         try:
             long_tasks_file = os.path.join(task['dir'], task['prefix'] + '_long_tasks.json.gz')
-            with gzip.open(long_tasks_file, 'wt', 7) as f_out:
+            with gzip.open(long_tasks_file, 'wt', 9) as f_out:
                 f_out.write(json.dumps(self.long_tasks))
         except Exception:
             logging.exception("Error writing the long tasks")
@@ -738,7 +738,7 @@ class Firefox(DesktopBrowser):
             test_end = int((monotonic() - task['run_start_time']) * 1000)
             interactive_periods.append([last_end, test_end])
             interactive_file = os.path.join(task['dir'], task['prefix'] + '_interactive.json.gz')
-            with gzip.open(interactive_file, 'wt', 7) as f_out:
+            with gzip.open(interactive_file, 'wt', 9) as f_out:
                 f_out.write(json.dumps(interactive_periods))
         except Exception:
             logging.exception("Error writing the interactive periods")
@@ -762,7 +762,7 @@ class Firefox(DesktopBrowser):
                                       base_name, length, start_pos)
                         with open(path, 'rb') as f_in:
                             f_in.seek(start_pos)
-                            with gzip.open(dest, 'wb', 7) as f_out:
+                            with gzip.open(dest, 'wb', 9) as f_out:
                                 while length > 0:
                                     read_bytes = min(length, 1024 * 1024)
                                     buff = f_in.read(read_bytes)
@@ -784,15 +784,15 @@ class Firefox(DesktopBrowser):
             logging.debug('Parsing moz logs relative to %s start time', start_time)
             request_timings = parser.process_logs(task['moz_log'], start_time)
 
-            # Clean up network log files when debug is not enabled
-            # May need to change this so we always delete but handy to keep in short term
-            if 'debug' not in self.job or not self.job['debug']:
-                files = sorted(glob.glob(task['moz_log'] + '*'))
-                for path in files:
-                    try:
-                         os.remove(path)
-                    except Exception:
-                        pass
+            # Clean up network log files as they can be large
+            # If you want to keep them during local testing uncomment the if and indent the code
+            # if 'debug' not in self.job or not self.job['debug']:
+            files = sorted(glob.glob(task['moz_log'] + '*'))
+            for path in files:
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
 
         # Build the request and page data
         if len(request_timings) and task['current_step'] >= 1:
@@ -951,7 +951,7 @@ class Firefox(DesktopBrowser):
         result['requests'] = self.merge_requests(request_timings)
         result['pageData'] = self.calculate_page_stats(result['requests'])
         devtools_file = os.path.join(task['dir'], task['prefix'] + '_devtools_requests.json.gz')
-        with gzip.open(devtools_file, 'wt', 7) as f_out:
+        with gzip.open(devtools_file, 'wt', 9) as f_out:
             json.dump(result, f_out)
 
     def get_empty_request(self, request_id, url):
