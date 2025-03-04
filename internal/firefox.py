@@ -784,15 +784,15 @@ class Firefox(DesktopBrowser):
             logging.debug('Parsing moz logs relative to %s start time', start_time)
             request_timings = parser.process_logs(task['moz_log'], start_time)
 
-            # Clean up network log files when debug is not enabled
-            # May need to change this so we always delete but handy to keep in short term
-            if 'debug' not in self.job or not self.job['debug']:
-                files = sorted(glob.glob(task['moz_log'] + '*'))
-                for path in files:
-                    try:
-                         os.remove(path)
-                    except Exception:
-                        pass
+            # Clean up network log files as they can be large
+            # If you want to keep them during local testing uncomment the if and indent the code
+            # if 'debug' not in self.job or not self.job['debug']:
+            files = sorted(glob.glob(task['moz_log'] + '*'))
+            for path in files:
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
 
         # Build the request and page data
         if len(request_timings) and task['current_step'] >= 1:
