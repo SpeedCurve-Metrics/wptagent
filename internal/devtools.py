@@ -404,7 +404,7 @@ class DevTools(object):
                                         summary[url]['{0}_bytes_used'.format(category)] = used_bytes
                                         summary[url]['{0}_percent_used'.format(category)] = used_pct
                         path = self.path_base + '_coverage.json.gz'
-                        with gzip.open(path, 'wt', 7) as f_out:
+                        with gzip.open(path, 'wt', 9) as f_out:
                             json.dump(summary, f_out)
                     self.send_command('CSS.disable', {})
                     self.send_command('DOM.disable', {})

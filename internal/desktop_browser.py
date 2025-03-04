@@ -539,7 +539,7 @@ class DesktopBrowser(BaseBrowser):
         # record the CPU/Bandwidth/memory info
         if self.usage_queue is not None and not self.usage_queue.empty() and task is not None:
             file_path = os.path.join(task['dir'], task['prefix']) + '_progress.csv.gz'
-            gzfile = gzip.open(file_path, 'wt', 7)
+            gzfile = gzip.open(file_path, 'wt', 9)
             if gzfile:
                 gzfile.write("Offset Time (ms),Bandwidth In (bps),CPU Utilization (%),Memory\n")
                 try:
@@ -618,7 +618,7 @@ class DesktopBrowser(BaseBrowser):
             if os.path.isfile(self.pcap_file):
                 pcap_out = self.pcap_file + '.gz'
                 with open(self.pcap_file, 'rb') as f_in:
-                    with gzip.open(pcap_out, 'wb', 7) as f_out:
+                    with gzip.open(pcap_out, 'wb', 9) as f_out:
                         shutil.copyfileobj(f_in, f_out)
                 if os.path.isfile(pcap_out):
                     self.pcap_thread = threading.Thread(target=self.process_pcap)
@@ -661,7 +661,7 @@ class DesktopBrowser(BaseBrowser):
             path = os.path.join(task['dir'], task['prefix'] + '_page_data.json.gz')
             json_page_data = json.dumps(task['page_data'])
             logging.debug('Page Data: %s', json_page_data)
-            with gzip.open(path, 'wt', 7) as outfile:
+            with gzip.open(path, 'wt', 9) as outfile:
                 outfile.write(json_page_data)
 
     def process_pcap(self):
