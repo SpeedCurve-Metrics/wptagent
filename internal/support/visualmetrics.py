@@ -1348,7 +1348,7 @@ def calculate_visual_metrics(histograms_file, start, end, perceptual, dirs, prog
         if progress and progress_file is not None:
             file_name, ext = os.path.splitext(progress_file)
             if ext.lower() == '.gz':
-                f = gzip.open(progress_file, 'wt', 7)
+                f = gzip.open(progress_file, 'wt', 9)
             else:
                 f = open(progress_file, 'w') # TODO (AD) Should be 'wt'?
             json.dump(progress, f)
@@ -1389,7 +1389,7 @@ def calculate_visual_metrics(histograms_file, start, end, perceptual, dirs, prog
                     hero_data['timings'] = hero_timings
                     metrics += hero_timings
 
-                    with gzip.open(hero_elements_file, 'wt', 7) as hero_f_out:
+                    with gzip.open(hero_elements_file, 'wt', 9) as hero_f_out:
                         json.dump(hero_data, hero_f_out)
             else:
                 logging.warning('Hero elements file is not valid: ' + str(hero_elements_file))

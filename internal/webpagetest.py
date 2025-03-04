@@ -1145,7 +1145,7 @@ class WebPageTest(object):
         if 'debug_log' in task and os.path.isfile(task['debug_log']):
             debug_out = task['debug_log'] + '.gz'
             with open(task['debug_log'], 'rb') as f_in:
-                with gzip.open(debug_out, 'wb', 7) as f_out:
+                with gzip.open(debug_out, 'wb', 9) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             try:
                 os.remove(task['debug_log'])
