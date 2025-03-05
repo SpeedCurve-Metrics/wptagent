@@ -178,7 +178,7 @@ class WPTAgent(object):
                     if self.task['lighthouse_log']:
                         try:
                             log_file = os.path.join(self.task['dir'], 'lighthouse.log.gz')
-                            with gzip.open(log_file, 'wt', 9) as f_out:
+                            with gzip.open(log_file, 'wt') as f_out:
                                 f_out.write(self.task['lighthouse_log'])
                         except Exception:
                             logging.exception('Error compressing lighthouse log')

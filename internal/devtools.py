@@ -1292,7 +1292,7 @@ class DevTools(object):
         if self.task['log_data']:
             if self.dev_tools_file is None:
                 path = self.path_base + '_devtools.json.gz'
-                self.dev_tools_file = gzip.open(path, 'wt', 7)
+                self.dev_tools_file = gzip.open(path, 'wt')
                 self.dev_tools_file.write("[{}")
             if self.dev_tools_file is not None:
                 self.dev_tools_file.write(",\n")
@@ -1474,7 +1474,7 @@ class DevToolsClient(WebSocketClient):
         """Process Tracing.* dev tools events"""
         if 'params' in msg and 'value' in msg['params'] and len(msg['params']['value']):
             if self.trace_file is None and self.keep_timeline:
-                self.trace_file = gzip.open(self.path_base + '_trace.json.gz', 'wt', compresslevel=7)
+                self.trace_file = gzip.open(self.path_base + '_trace.json.gz', 'wt')
                 self.trace_file.write('{"traceEvents":[{}')
             if self.trace_parser is None:
                 from internal.support.trace_parser import Trace
