@@ -291,7 +291,7 @@ class ChromeAndroid(AndroidBrowser, DevtoolsBrowser):
             if os.path.isfile(netlog_file):
                 netlog_gzip = netlog_file + '.gz'
                 with open(netlog_file, 'rb') as f_in:
-                    with gzip.open(netlog_gzip, 'wb', 9) as f_out:
+                    with gzip.open(netlog_gzip, 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
                 if os.path.isfile(netlog_gzip):
                     os.remove(netlog_file)

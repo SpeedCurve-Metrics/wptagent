@@ -394,7 +394,7 @@ class OptimizationChecks(object):
             # Save the results
             if self.results:
                 path = os.path.join(self.task['dir'], self.task['prefix']) + '_optimization.json.gz'
-                gz_file = gzip.open(path, 'wt', 7)
+                gz_file = gzip.open(path, 'wt') # TODO (AD) rewrite this using with?
                 if gz_file:
                     gz_file.write(json.dumps(self.results))
                     gz_file.close()
@@ -788,7 +788,7 @@ class OptimizationChecks(object):
                     else:
                         out_file = request['body'] + '.gzip'
                         with open(request['body'], 'rb') as f_in:
-                            with gzip.open(out_file, 'wb', 7) as f_out:
+                            with gzip.open(out_file, 'wb') as f_out:
                                 shutil.copyfileobj(f_in, f_out)
                         if os.path.isfile(out_file):
                             target_size = os.path.getsize(out_file)

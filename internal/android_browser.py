@@ -234,7 +234,7 @@ class AndroidBrowser(BaseBrowser):
             if os.path.isfile(tcpdump):
                 pcap_out = tcpdump + '.gz'
                 with open(tcpdump, 'rb') as f_in:
-                    with gzip.open(pcap_out, 'wb', 9) as f_out:
+                    with gzip.open(pcap_out, 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
                 if os.path.isfile(pcap_out):
                     os.remove(tcpdump)
@@ -290,7 +290,7 @@ class AndroidBrowser(BaseBrowser):
             path = os.path.join(task['dir'], task['prefix'] + '_page_data.json.gz')
             json_page_data = json.dumps(task['page_data'])
             logging.debug('Page Data: %s', json_page_data)
-            with gzip.open(path, 'wt', 9) as outfile:
+            with gzip.open(path, 'wt') as outfile:
                 outfile.write(json_page_data)
 
     def screenshot(self, task):
