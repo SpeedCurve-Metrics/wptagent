@@ -1171,14 +1171,19 @@ class DevTools(object):
                 self.get_response_body(request_id, False)
             elif event == 'loadingFailed':
                 request['failed'] = msg['params']
-                if not self.response_started:
-                    if 'errorText' in msg['params']:
-                        self.nav_error = msg['params']['errorText']
-                    else:
-                        self.nav_error = 'Unknown navigation error'
-                    self.nav_error_code = 404
-                    logging.debug('Navigation error: %s', self.nav_error)
-                elif self.main_request is not None and \
+                #
+                # TODO(AD) - temporary hack???
+                # Only set an page level error if it's the main request i.e. ingore resouce failures
+                #
+                # if not self.response_started:
+                #    if 'errorText' in msg['params']:
+                #        self.nav_error = msg['params']['errorText']
+                #    else:
+                #        self.nav_error = 'Unknown navigation error'
+                #    self.nav_error_code = 404
+                #    logging.debug('Navigation error: %s', self.nav_error)
+                #el
+                if self.main_request is not None and \
                         request_id == self.main_request and \
                         'errorText' in msg['params'] and \
                         'canceled' in msg['params'] and \
