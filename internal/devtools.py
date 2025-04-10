@@ -1071,8 +1071,10 @@ class DevTools(object):
                         'sourceURL' in entry and entry['sourceURL']:
                     self.stylesheets[entry['styleSheetId']] = entry['sourceURL']
 
+
     def process_network_event(self, event, msg, target_id=None):
         """Process Network.* dev tools events"""
+
         if event == 'requestIntercepted':
             params = {'interceptionId': msg['params']['interceptionId']}
             if 'overrideHosts' in self.task:
@@ -1103,98 +1105,104 @@ class DevTools(object):
             if target_id is not None:
                 request['targetId'] = target_id
             ignore_activity = request['is_video'] if 'is_video' in request else False
-            if event == 'requestWillBeSent':
-                if self.is_navigating and self.main_frame is None and \
-                        'frameId' in msg['params']:
-                    self.is_navigating = False
-                    self.main_frame = msg['params']['frameId']
-                if 'request' not in request:
-                    request['request'] = []
-                request['request'].append(msg['params'])
-                if 'url' in msg['params'] and msg['params']['url'].endswith('.mp4'):
-                    request['is_video'] = True
-                request['fromNet'] = True
-                if self.main_frame is not None and \
-                        self.main_request is None and \
-                        'frameId' in msg['params'] and \
-                        msg['params']['frameId'] == self.main_frame:
-                    logging.debug('Main request detected')
-                    self.main_request = request_id
-                    if 'timestamp' in msg['params']:
-                        self.start_timestamp = float(msg['params']['timestamp'])
-            elif event == 'requestWillBeSentExtraInfo':
-                request['requestExtra'] = msg['params']
-            elif event == 'resourceChangedPriority':
-                if 'priority' not in request:
-                    request['priority'] = []
-                request['priority'].append(msg['params'])
-            elif event == 'requestServedFromCache':
-                self.response_started = True
-                request['fromNet'] = False
-            elif event == 'responseReceived':
-                self.response_started = True
-                if 'response' not in request:
-                    request['response'] = []
-                request['response'].append(msg['params'])
-                if 'response' in msg['params']:
-                    response = msg['params']['response']
-                    if 'fromDiskCache' in response and response['fromDiskCache']:
-                        request['fromNet'] = False
-                    if 'fromServiceWorker' in response and response['fromServiceWorker']:
-                        request['fromNet'] = False
-                    if 'mimeType' in response and response['mimeType'].startswith('video/'):
+
+            match event:
+                case 'requestWillBeSent':
+                    if self.is_navigating and self.main_frame is None and \
+                            'frameId' in msg['params']:
+                        self.is_navigating = False
+                        self.main_frame = msg['params']['frameId']
+                    if 'request' not in request:
+                        request['request'] = []
+                    request['request'].append(msg['params'])
+                    if 'url' in msg['params'] and msg['params']['url'].endswith('.mp4'):
                         request['is_video'] = True
+                    request['fromNet'] = True
+                    if self.main_frame is not None and \
+                            self.main_request is None and \
+                            'frameId' in msg['params'] and \
+                            msg['params']['frameId'] == self.main_frame:
+                        logging.debug('Main request detected')
+                        self.main_request = request_id
+                        if 'timestamp' in msg['params']:
+                            self.start_timestamp = float(msg['params']['timestamp'])
+
+                case 'requestWillBeSentExtraInfo':
+                    request['requestExtra'] = msg['params']
+
+                case 'resourceChangedPriority':
+                    if 'priority' not in request:
+                        request['priority'] = []
+                    request['priority'].append(msg['params'])
+
+                case 'requestServedFromCache':
+                    self.response_started = True
+                    request['fromNet'] = False
+
+                case 'responseReceived':
+                    self.response_started = True
+                    if 'response' not in request:
+                        request['response'] = []
+                    request['response'].append(msg['params'])
+                    if 'response' in msg['params']:
+                        response = msg['params']['response']
+                        if 'fromDiskCache' in response and response['fromDiskCache']:
+                            request['fromNet'] = False
+                        if 'fromServiceWorker' in response and response['fromServiceWorker']:
+                            request['fromNet'] = False
+                        if 'mimeType' in response and response['mimeType'].startswith('video/'):
+                            request['is_video'] = True
+                        if self.main_request is not None and \
+                                request_id == self.main_request and \
+                                'headers' in response:
+                            self.main_request_headers = response['headers']
+                        if self.main_request is not None and \
+                                request_id == self.main_request and \
+                                'status' in response and response['status'] >= 400:
+                            self.nav_error_code = response['status']
+                            if 'statusText' in response and response['statusText']:
+                                self.nav_error = response['statusText']
+                            else:
+                                self.nav_error = '{0:d} Navigation error'.format(self.nav_error_code)
+                            logging.debug('Main resource Navigation error: %s', self.nav_error)
+
+                case 'responseReceivedExtraInfo':
+                    self.response_started = True
+                    request['responseExtra'] = msg['params']
+
+                case 'dataReceived':
+                    self.response_started = True
+                    if 'data' not in request:
+                        request['data'] = []
+                    request['data'].append(msg['params'])
+
+                case 'loadingFinished':
+                    self.response_started = True
+                    request['finished'] = msg['params']
+                    self.get_response_body(request_id, False)
+
+                case 'loadingFailed':
+                    request['failed'] = msg['params']
+
+                    # Only set a page level error if it's the main request i.e. don't trigger for resource
+                    # failures due to Content-Security-Policy and HTTP Strict Transport Security etc
+                    # TODO(AD) - Should this really set a 404?
+
                     if self.main_request is not None and \
                             request_id == self.main_request and \
-                            'headers' in response:
-                        self.main_request_headers = response['headers']
-                    if self.main_request is not None and \
-                            request_id == self.main_request and \
-                            'status' in response and response['status'] >= 400:
-                        self.nav_error_code = response['status']
-                        if 'statusText' in response and response['statusText']:
-                            self.nav_error = response['statusText']
-                        else:
-                            self.nav_error = '{0:d} Navigation error'.format(self.nav_error_code)
-                        logging.debug('Main resource Navigation error: %s', self.nav_error)
-            elif event == 'responseReceivedExtraInfo':
-                self.response_started = True
-                request['responseExtra'] = msg['params']
-            elif event == 'dataReceived':
-                self.response_started = True
-                if 'data' not in request:
-                    request['data'] = []
-                request['data'].append(msg['params'])
-            elif event == 'loadingFinished':
-                self.response_started = True
-                request['finished'] = msg['params']
-                self.get_response_body(request_id, False)
-            elif event == 'loadingFailed':
-                request['failed'] = msg['params']
-                #
-                # TODO(AD) - temporary hack???
-                # Only set an page level error if it's the main request i.e. ingore resouce failures
-                #
-                # if not self.response_started:
-                #    if 'errorText' in msg['params']:
-                #        self.nav_error = msg['params']['errorText']
-                #    else:
-                #        self.nav_error = 'Unknown navigation error'
-                #    self.nav_error_code = 404
-                #    logging.debug('Navigation error: %s', self.nav_error)
-                #el
-                if self.main_request is not None and \
-                        request_id == self.main_request and \
-                        'errorText' in msg['params'] and \
-                        'canceled' in msg['params'] and \
-                        not msg['params']['canceled']:
-                    self.nav_error = msg['params']['errorText']
-                    self.nav_error_code = 404
-                    logging.debug('Navigation error: %s', self.nav_error)
-            else:
-                ignore_activity = True
+                            'errorText' in msg['params'] and \
+                            'canceled' in msg['params'] and \
+                            not msg['params']['canceled']:
+                        self.nav_error = msg['params']['errorText']
+                        self.nav_error_code = 404
+                        logging.debug('Navigation error: %s', self.nav_error)
+
+                case _:
+                    ignore_activity = True
+            
             if not self.task['stop_at_onload'] and not ignore_activity:
                 self.last_activity = monotonic()
+                
 
     def process_debugger_event(self, event, msg):
         """ Process Debugger.* dev tools events
@@ -1206,38 +1214,48 @@ class DevTools(object):
                 https://andydavies.github.io/agent-tests/debugger/no-debugger.html
         """
 
-        if event == 'paused':
-            logging.debug("Page contains debugger; statement")
-            self.send_command('Debugger.resume', {})
+        match event:
+            case 'paused':
+                logging.debug("Page contains debugger; statement")
+                self.send_command('Debugger.resume', {})
+
 
     def process_inspector_event(self, event):
         """Process Inspector.* dev tools events"""
-        if event == 'detached':
-            self.task['error'] = 'Inspector detached, possibly crashed.'
-            self.task['page_data']['result'] = 12999
-        elif event == 'targetCrashed':
-            self.task['error'] = 'Browser crashed.'
-            self.task['page_data']['result'] = 12999
+
+        match event:
+            case 'detached':
+                self.task['error'] = 'Inspector detached, possibly crashed.'
+                self.task['page_data']['result'] = 12999
+
+            case 'targetCrashed':
+                self.task['error'] = 'Browser crashed.'
+                self.task['page_data']['result'] = 12999
+
 
     def process_target_event(self, event, msg):
         """Process Target.* dev tools events"""
-        if event == 'attachedToTarget':
-            if 'targetInfo' in msg['params'] and 'targetId' in msg['params']['targetInfo']:
-                target = msg['params']['targetInfo']
-                if 'type' in target and target['type'] == 'service_worker':
-                    self.workers.append(target)
-                    if self.recording:
-                        self.enable_target(target['targetId'])
-                self.send_command('Runtime.runIfWaitingForDebugger', {},
-                                  target_id=target['targetId'])
-        if event == 'receivedMessageFromTarget':
-            target_id = None
-            if 'targetId' in msg['params']:
-                target_id = msg['params']['targetId']
-            if 'message' in msg['params'] and target_id is not None:
-                logging.debug(msg['params']['message'][:200])
-                target_message = json.loads(msg['params']['message'])
-                self.process_message(target_message, target_id=target_id)
+
+        match event:
+            case 'attachedToTarget':
+                if 'targetInfo' in msg['params'] and 'targetId' in msg['params']['targetInfo']:
+                    target = msg['params']['targetInfo']
+                    if 'type' in target and target['type'] == 'service_worker':
+                        self.workers.append(target)
+                        if self.recording:
+                            self.enable_target(target['targetId'])
+                    self.send_command('Runtime.runIfWaitingForDebugger', {},
+                                    target_id=target['targetId'])
+                    
+            case 'receivedMessageFromTarget':
+                target_id = None
+                if 'targetId' in msg['params']:
+                    target_id = msg['params']['targetId']
+                if 'message' in msg['params'] and target_id is not None:
+                    logging.debug(msg['params']['message'][:200])
+                    target_message = json.loads(msg['params']['message'])
+                    self.process_message(target_message, target_id=target_id)
+
 
     def process_fetch_event(self, event, msg):
         """ Process Fetch.* devtools events
