@@ -9,6 +9,7 @@
  * For more information, see http://www.mozilla.org/unix/customizing.html#prefs
  */
 
+user_pref("app.update.auto", false);
 user_pref("app.update.enabled", false);
 user_pref("app.update.url", "");
 user_pref("browser.aboutHomeSnippets.updateUrl", "");
