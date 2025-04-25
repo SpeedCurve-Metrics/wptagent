@@ -38,6 +38,10 @@ RUN apt-get update && \
   software-properties-common \
   nano
 
+# Stable Chrome versions https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
+#
+# Firefox versions: https://download-installer.cdn.mozilla.net/pub/firefox/releases/
+
 # Add the ARGs here so that changing them doesn't invalidate the previous layers' cache
 ARG CHROME_STABLE_VERSION=133.0.6943.98-1
 ARG FIREFOX_STABLE_VERSION=135.0
@@ -57,19 +61,27 @@ RUN  curl -fsSL https://deb.nodesource.com/setup_${NODEJS_VERSION} | sudo bash -
 # Note: Google have started removing old Chrome versions, so we cannot specify a version here. We
 # just fetch the latest stable and unstable builds.
 # Chrome Stable
-RUN wget -O /tmp/chrome-stable.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-RUN apt install -y /tmp/chrome-stable.deb && \
-    rm /tmp/chrome-stable.deb
+#RUN wget -O /tmp/chrome-stable.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+#RUN apt install -y /tmp/chrome-stable.deb && \
+#    rm /tmp/chrome-stable.deb
+
+RUN  wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+RUN  sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+  # Chrome stable has to be manually downloaded and installed (only latest stable version is available via apt-get)
+RUN  wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_STABLE_VERSION}_amd64.deb
+RUN  apt install -y /tmp/chrome.deb 
+RUN  rm /tmp/chrome.deb
+      
 
 # Chrome Beta
-RUN wget -O /tmp/chrome-beta.deb https://dl.google.com/linux/direct/google-chrome-beta_current_amd64.deb
-RUN apt install -y /tmp/chrome-beta.deb && \
-    rm /tmp/chrome-beta.deb
+# RUN wget -O /tmp/chrome-beta.deb https://dl.google.com/linux/direct/google-chrome-beta_current_amd64.deb
+# RUN apt install -y /tmp/chrome-beta.deb && \
+#    rm /tmp/chrome-beta.deb
 
 # Chrome Unstable
-RUN wget -O /tmp/chrome-unstable.deb https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
-RUN apt install -y /tmp/chrome-unstable.deb && \
-    rm /tmp/chrome-unstable.deb
+# RUN wget -O /tmp/chrome-unstable.deb https://dl.google.com/linux/direct/google-chrome-unstable_current_amd64.deb
+# RUN apt install -y /tmp/chrome-unstable.deb && \
+#    rm /tmp/chrome-unstable.deb
 
 # Firefox
 # RUN wget -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_STABLE_VERSION}/linux-x86_64/en-US/firefox-127.0.2.tar.bz2 && \
