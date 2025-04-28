@@ -4,6 +4,7 @@
 # found in the LICENSE file.
 
 # Firefox error codes https://searchfox.org/mozilla-central/source/tools/ts/config/error_list.json
+# Firefox CLI options https://wiki.mozilla.org/Firefox/CommandLineOptions#Command_line_options
 
 """Support for Firefox"""
 from datetime import datetime, timedelta

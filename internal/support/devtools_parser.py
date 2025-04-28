@@ -874,6 +874,7 @@ class DevToolsParser(object):
                     request['url'] = parts.path
                     if len(parts.query):
                         request['url'] += '?' + parts.query
+                    request['method'] = None
                     request['responseCode'] = -1
                     request['score_cache'] = -1
                     request['score_cdn'] = -1
@@ -932,6 +933,8 @@ class DevToolsParser(object):
                     if 'start' in entry:
                         request['load_start_float'] = float(str(entry['start']).strip())
                     request['headers'] = {'request': [], 'response': []}
+                    if 'method' in entry:
+                        request['method'] = entry['method']
                     if 'status' in entry:
                         request['responseCode'] = entry['status']
                     if 'request_headers' in entry:
