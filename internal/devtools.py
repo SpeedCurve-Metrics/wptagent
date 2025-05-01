@@ -825,8 +825,14 @@ class DevTools(object):
     def grab_screenshot(self, path, png=True, resize=0):
         """Save the screen shot (png or jpeg)"""
         if not self.main_thread_blocked:
-            response = self.send_command("Page.captureScreenshot", {}, wait=True, timeout=30)
+            start_ts = monotonic()
+
+            response = self.send_command("Page.captureScreenshot", {}, wait=True, timeout=60)
+
             if response is not None and 'result' in response and 'data' in response['result']:
+                duration = monotonic() - start_ts
+                logging.debug('Screenshot took %0.3f sec', duration)
+
                 resize_string = '' if not resize else '-resize {0:d}x{0:d} '.format(resize)
                 if png:
                     with open(path, 'wb') as image_file:
@@ -851,6 +857,9 @@ class DevTools(object):
                             os.remove(tmp_file)
                         except Exception:
                             pass
+            else:
+                duration = monotonic() - start_ts
+                logging.warning('Screenshot timed out after %0.3f sec', duration)
 
 # TODO(AD) - seems to be unused
     def colors_are_similar(self, color1, color2, threshold=15):
