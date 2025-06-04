@@ -137,6 +137,8 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         args.append('--remote-allow-origins=*')
         if 'ignoreSSL' in job and job['ignoreSSL']:
             args.append('--ignore-certificate-errors')
+        if 'language' in task and task['language'] is not None:
+            args.append('--accept-lang=' + task['language'])
 
     # TODO (AD) Review
 
