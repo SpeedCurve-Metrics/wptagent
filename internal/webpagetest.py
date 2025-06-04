@@ -578,7 +578,8 @@ class WebPageTest(object):
                         'navigated': False,
                         'page_result': None,
                         'script_step_count': 1,
-                        'naive_navigation_count' : 1
+                        'naive_navigation_count' : 1,
+                        'language': None
                     }
                 # Increase the activity timeout for high-latency tests
                 if 'latency' in job:
@@ -870,6 +871,10 @@ class WebPageTest(object):
                                 if re.match(r'^\d+\.\d+\.\d+\.\d+$', addr) and \
                                         re.match(r'^[a-zA-Z0-9\-\.]+$', target):
                                     task['dns_override'].append([target, addr])
+                    elif command == 'setlanguage':
+                        # Set browser language
+                        if target is not None:
+                            task['language'] = target
                     # Commands that get translated into exec commands
                     elif command in ['click', 'selectvalue', 'sendclick', 'setinnerhtml',
                                      'setinnertext', 'setvalue', 'setvalueex', 'setotpvalue', 'submitform']:
