@@ -476,7 +476,10 @@ class NetLogParser():
                     else:
                         found1stRequest = True
                 for to_remove in requests_to_remove:
-                    requests.pop(to_remove)
+                    try:
+                        requests.pop(to_remove)
+                    except Exception as err:
+                        logging.exception('Error removing request %d from requests: %s', to_remove, err)
 
                 # Find the start timestamp if we didn't have one already
                 times = ['dns_start', 'dns_end',
