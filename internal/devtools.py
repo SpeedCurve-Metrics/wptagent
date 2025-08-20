@@ -319,6 +319,9 @@ class DevTools(object):
             if "cdp.perf" not in trace_config["includedCategories"]:
                 trace_config["includedCategories"].append("cdp.perf")
 
+            # Flush any pending messages before starting the trace
+            self.flush_pending_messages()
+
             self.trace_enabled = True
             self.send_command('Tracing.start',
                               {'traceConfig': trace_config},
