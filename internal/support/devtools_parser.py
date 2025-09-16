@@ -133,9 +133,41 @@ class DevToolsParser(object):
         f_in.close()
         if raw_events is not None and len(raw_events):
             first_timestamp = None
+            first_request_timestamp = None
+            first_navigation_timestamp = None
             raw_requests = {}
             extra_headers = {}
             id_map = {}
+
+            # Find first event, first request and first navigation timestamps
+            # In multistep tests late requests from the previous step sometimes show up in DevTools data
+            # for the next navigation and create a mismatch with the trace data.
+            for raw_event in raw_events:
+                if 'method' in raw_event and 'params' in raw_event:
+                    method = raw_event['method']
+                    params = raw_event['params']
+
+                    # First event timestamp
+                    if first_timestamp is None and 'timestamp' in params:
+                        first_timestamp = params['timestamp']
+
+                    # First request timestamp
+                    if first_request_timestamp is None and method == 'Network.requestWillBeSent':
+                        if 'timestamp' in params:
+                            first_request_timestamp = params['timestamp']
+
+                    # First navigation… Page.frameStartedNavigating etc events don't have timestamps
+                    # So use first instance of Network.requestWillBeSent where documentURL matches the request URL
+                    if first_navigation_timestamp is None and method == 'Network.requestWillBeSent':
+                        if params['documentURL'] == params['request']['url'] and 'timestamp' in params:
+                            first_navigation_timestamp = params['timestamp']
+            
+            # Use the latest of the three timestamps as the start of the navigation
+            if first_request_timestamp is not None and first_request_timestamp > first_timestamp:
+                first_timestamp = first_request_timestamp
+            if first_navigation_timestamp is not None and first_navigation_timestamp > first_timestamp:
+                first_timestamp = first_navigation_timestamp
+          
             for raw_event in raw_events:
                 if 'method' in raw_event and 'params' in raw_event:
                     method = raw_event['method']
@@ -147,6 +179,7 @@ class DevToolsParser(object):
                         original_id = request_id
                         if request_id in id_map:
                             request_id += '-' + str(id_map[request_id])
+
                     # Pull out the script ID's
                     if method == 'Debugger.scriptParsed' and 'scriptId' in params:
                         script_id = params['scriptId']
@@ -163,6 +196,7 @@ class DevToolsParser(object):
                                 script_url = params['url']
                             if script_url is not None:
                                 self.script_ids[script_id] = script_url
+
                     # Handle the events without timestamps (which will be sorted to the end)
                     if method == 'Page.frameNavigated' and 'frame' in params and \
                             'id' in params['frame'] and 'parentId' not in params['frame']:
@@ -171,17 +205,15 @@ class DevToolsParser(object):
                             request_id is not None and request_id in raw_requests:
                         raw_requests[request_id]['fromNet'] = False
                         raw_requests[request_id]['fromCache'] = True
-                    # Adjust all of the timestamps to be relative to the start of navigation
-                    # and in milliseconds
-                    if first_timestamp is None and 'timestamp' in params and \
-                            method.startswith('Network.requestWillBeSent'):
-                        first_timestamp = params['timestamp']
+
+                    # Adjust all of timestamps to be relative to the start time and in milliseconds
                     if first_timestamp is not None and 'timestamp' in params:
                         if params['timestamp'] >= first_timestamp:
                             params['timestamp'] -= first_timestamp
                             params['timestamp'] *= 1000.0
                         else:
                             continue
+
                     if method == 'Page.loadEventFired' and 'timestamp' in params and \
                             ('onload' not in page_data or
                              params['timestamp'] > page_data['onload']):

@@ -26,6 +26,12 @@ These are processed by
 
 Each of these can be run as standalone CLI tools - see the code for the list of arguments
 
+Running a test with Debug and Netlog enabled with generate source files for processing
+
+![CDP commands and events](https://chromedevtools.github.io/devtools-protocol/)
+
+![jq](https://jqlang.org) is handy for exploring and filtering events e.g. `cat 1_devtools.json | jq '.[] | select(.method == "Network.requestWillBeSent")'`, extracts all the records for when a network request is about to be sent 
+
 
 
 ### Network Request Data
@@ -34,9 +40,11 @@ Each of these can be run as standalone CLI tools - see the code for the list of 
 
 In Chrome the data for network requests that are visualised as a waterfall is produced by merging CDP events and netlog data.
 
-CDP data is a view of the requests the renderer makes and the responses it gets, this is not a complete picture of network activity. The netlog contains data on all the requests so includes ones that aren't visible to the renderer e.g. requests triggered by early hints, beacon API etc., and these are given a request_id starting 99999.9999.n
+CDP data is a view of the requests the renderer makes and the responses it gets, this is not a complete picture of network activity. 
 
-The netlog contains requests from all browser processes so may contain requests from internal services, where possible the services that make these requests are disabled via browser flags, or filtered when the netlog is processed
+The netlog contains data on all the requests and includes ones that aren't visible to the renderer e.g. requests triggered by early hints, beacon API etc., and these are given a request_id starting *99999.9999.n*
+
+The netlog also contains requests from all browser processes so may contain requests from internal services, where possible the services that make these requests are disabled via browser flags, or filtered when the netlog is processed. These requests tend to have an initiator of *not an origin*
 
 
 ## Script Command Implementation
