@@ -50,7 +50,9 @@ class NetLogParser():
         self.marked_start_time = None # TODO (AD) Unused ???
         self.netlog_requests = None
         self.netlog_event_types = {}
+        self.raw_constants = {}
         self.constants = {}
+        self.netlog_out = None
         return
 
     def clear_requests(self):
@@ -60,7 +62,24 @@ class NetLogParser():
         self.marked_start_time = None
         self.netlog_requests = None
         self.netlog_event_types = {}
+        self.netlog_out = None
 
+    def open_tee(self, out_file):
+        """ Retain per-step raw netlog data for debugging etc"""
+        if self.netlog_out is None:
+            self.netlog_out = open(out_file, 'wt')
+
+        # Constants are re-used from step to step so write out any constants captured in first step
+        if self.constants:
+            self.netlog_out.write('{"constants":' + json.dumps(self.raw_constants) + ',\n "events": [\n')
+
+
+    def close_tee(self):
+        """ Close the raw netlog file """
+        if self.netlog_out is not None:
+            self.netlog_out.write(']}\n')
+            self.netlog_out.close()
+            self.netlog_out = None
 #
 # process_netlog
 #
@@ -118,6 +137,10 @@ class NetLogParser():
 #
     def process_constants(self, constants):
         """ Create lookup table from constants entry in NetLog """
+
+        # Store the unmodified constants for output if needed
+        self.raw_constants = constants
+
         for entry in constants:
             # Exclude entries such as "activeFieldTrialGroups":[] that aren't dictionaries
             if isinstance(constants[entry], dict):
@@ -125,6 +148,7 @@ class NetLogParser():
                 for key in constants[entry]:
                     value = constants[entry][key]
                     self.constants[entry][value] = key
+
 
 # 
 # process_event
@@ -144,6 +168,10 @@ class NetLogParser():
     def process_event(self, event):
 
         try:
+
+            if self.netlog_out is not None:
+                self.netlog_out.write(json.dumps(event) + ',\n')
+
             if 'phase' in event:
                 event['phase'] = self.constants['logEventPhase'][event['phase']]
             if 'type' in event:
@@ -161,6 +189,7 @@ class NetLogParser():
                 event['time'] = int(event['time']) * 1000
 
             self.ProcessNetlogEvent(event)
+
         except Exception as error: 
             logging.exception(error)
         
@@ -183,7 +212,7 @@ class NetLogParser():
 #                elif name in self.netlog_event_types:
 #                    event_type = self.netlog_event_types[name]
                 
-                event_type=event['source']['name'] # TODO (AD) switch to type?
+                event_type = event['source']['name'] # TODO (AD) switch to type?
 
                 if event_type is not None:
                     if event_type == 'HOST_RESOLVER_IMPL_JOB' or \
@@ -724,7 +753,7 @@ class NetLogParser():
                 self.netlog['connect_job'][parent_id]['dns'] = request_id
 #        if name == 'HOST_RESOLVER_SYSTEM_TASK' and 'phase' in event:
 # https://source.chromium.org/chromium/chromium/src/+/main:net/log/net_log_event_type_list.h;bpv=1;bpt=0;drc=9600a6c5b3ec6ab79b621b873cc95252512f310a;dlc=6c74820452efb7bf001b84cec2e38d5956f5f2a2
-        if name == 'HOST_RESOLVER_MANAGER_REQUEST' and 'phase' in event:
+        if (name == 'HOST_RESOLVER_MANAGER_REQUEST' or name == 'HOST_RESOLVER_DNS_TASK') and 'phase' in event:
             if event['phase'] == 'PHASE_BEGIN':
                 if 'start' not in entry or event['time'] < entry['start']: # entry['source']['start']:
                     entry['start'] = event['time']

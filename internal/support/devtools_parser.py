@@ -801,6 +801,7 @@ class DevToolsParser(object):
                    'tls_resumed': 'tls_resumed',
                    'tls_next_proto': 'tls_next_proto',
                    'tls_cipher_suite': 'tls_cipher_suite'}
+
         if self.netlog_requests_file is not None and os.path.isfile(self.netlog_requests_file):
             _, ext = os.path.splitext(self.netlog_requests_file)
             if ext.lower() == '.gz':
@@ -809,6 +810,7 @@ class DevToolsParser(object):
                 f_in = open(self.netlog_requests_file, 'r') # TODO (AD) Should this be rt?
             netlog = json.load(f_in)
             f_in.close()
+
             keep_requests = []
             for request in requests:
                 if 'request_id' not in request and 'id' in request:
@@ -846,8 +848,6 @@ class DevToolsParser(object):
                             if 'end' in entry:
                                 request['load_ms'] = int(round(entry['end'] -
                                                                entry['start']))
-                            if 'pushed' in entry and entry['pushed']:
-                                request['was_pushed'] = 1
                             if 'request_headers' in entry:
                                 if 'headers' not in request:
                                     request['headers'] = {'request': [], 'response': []}
@@ -1421,7 +1421,6 @@ def main():
     parser.add_argument('-o', '--out', help="Output requests json file.")
     options, _ = parser.parse_known_args()
 
-    # Set up logging
     # Set up logging
     log_level = logging.CRITICAL
   
