@@ -74,7 +74,8 @@ HOST_RULES = [
     '"MAP optimizationguide-pa.googleapis.com 127.0.0.1"',
     '"MAP offlinepages-pa.googleapis.com 127.0.0.1"',
     '"MAP update.googleapis.com 127.0.0.1"',
-    '"MAP content-autofill.googleapis.com 127.0.0.1"'
+    '"MAP content-autofill.googleapis.com 127.0.0.1"',
+    '"MAP android.clients.google.com 127.0.0.1"'
 ]
 
 ENABLE_CHROME_FEATURES = [
@@ -120,6 +121,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         self.netlog_lock = threading.Lock()
         self.netlog_thread = None
         self.netlog = None
+        self.keep_netlogs = False
 
     def launch(self, job, task):
         """Launch the browser"""
@@ -144,7 +146,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
 
         streamed_netlog = False
 
-        # TODO (AD) Can I just wrap this in a task['running_lighthouse'] is False check?
+        # Only capture netlog for non-Lighthouse runs
         if task['running_lighthouse'] is False:
             if platform.system() in ["Linux", "Darwin"]:
                 self.netlog_pipe = os.path.join(task['dir'], 'netlog.pipe')
@@ -164,13 +166,14 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
                     logging.exception('Error creating pipe for NetLog')
 
             # If we need to keep the netlog create file to write it to
-            # TODO (AD) Stop doing this for lighthouse runs
             if 'netlog' in job and job['netlog']:
-                self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
-                self.netlog_out = open(self.netlog_file, 'wt')
+                self.keep_netlogs = True
 
-                if not streamed_netlog:
-                    args.append('--log-net-log="{0}"'.format(self.netlog_file))
+#                self.netlog_file = os.path.join(task['dir'], task['prefix']) + '_netlog.txt'
+#                self.netlog_out = open(self.netlog_file, 'wt')
+
+#                if not streamed_netlog:
+#                    args.append('--log-net-log="{0}"'.format(self.netlog_file))
 
         if 'profile' in task:
             args.append('--user-data-dir="{0}"'.format(task['profile']))
@@ -260,11 +263,6 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
 # TODO (AD) This is a variation of the code in netlog_parser, is it possible to merge them?
             processing_events = False
             for line in self.netlog_in:
-
-                # Save a copy of the netlog if we need to
-                with self.netlog_lock:
-                    if self.netlog_out:
-                        self.netlog_out.write(line)
 
                 try:
                     line = line.strip(', \r\n')
@@ -374,12 +372,18 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
     def on_start_recording(self, task):
         """Notification that we are about to start an operation that needs to be recorded"""
         DesktopBrowser.on_start_recording(self, task)
+        DevtoolsBrowser.on_start_recording(self, task)
 
         # Remove exisiting requests in NetLog Parser (need to keep constants for parsing future events)
+        # Start recording netlog after tracing has started – starting it before can result in extaneous entries
+        # from the previous step as there's mo guarantee when something sent using sendBeacon will be sent
+        # and the delay in starting tracing can be many seconds e.g. 20s
         with self.netlog_lock:
             self.netlog.clear_requests()
 
-        DevtoolsBrowser.on_start_recording(self, task)
+        if self.keep_netlogs:
+            self.netlog.open_tee(os.path.join(task['dir'], task['prefix']) + '_netlog.txt')
+
 
     def on_stop_capture(self, task):
         """Do any quick work to stop things that are capturing data"""
@@ -392,6 +396,7 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
         logging.debug('on_stop_recording')
 
         DesktopBrowser.on_stop_recording(self, task)
+        DevtoolsBrowser.on_stop_recording(self, task)
 
         # Write out the netlog requests for this step
         with self.netlog_lock:
@@ -400,7 +405,8 @@ class ChromeDesktop(DesktopBrowser, DevtoolsBrowser):
                 logging.debug('Writing ' + netlog_requests)
                 self.netlog.write_netlog_requests(netlog_requests)
 
-        DevtoolsBrowser.on_stop_recording(self, task)
+            self.netlog.close_tee()
+
 
     def on_start_processing(self, task):
         """Start any processing of the captured data"""
