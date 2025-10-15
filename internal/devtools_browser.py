@@ -193,6 +193,9 @@ class DevtoolsBrowser(object):
         # Save count of total navigations (not just those we're recording)
         task['page_data']['debug']['rawNavigationCount'] = task['naive_navigation_count']
 
+        # Save exec / execAndWait errors - might need some refinement
+        task['page_data']['debug']['errors'] = []
+
         if self.devtools is not None:
             self.devtools.start_recording()
 
@@ -447,6 +450,8 @@ class DevtoolsBrowser(object):
         """Process an individual script command"""
         logging.debug("Processing script command:")
         logging.debug(command)
+
+        # TODO(AD) Update to use match/case
         if command['command'] == 'navigate':
             self.task['page_data']['URL'] = command['target']
             url = str(command['target']).replace('"', '\"')
@@ -491,7 +496,12 @@ class DevtoolsBrowser(object):
                 script = self.prepare_script_for_record(script, needs_mark) #pylint: disable=no-member
                 self.devtools.start_navigating()
             result = self.devtools.execute_js(script)
-            logging.debug(result)
+
+            # TODO(AD) the messaging - probably needs script command and output
+            if result is None:
+                logging.error("Error:" + json.dumps(script))
+                self.task['page_data']['debug']['errors'].append(json.dumps(script))
+
         elif command['command'] == 'sleep':
             delay = min(60, max(0, int(re.search(r'\d+', str(command['target'])).group())))
             if delay > 0:
