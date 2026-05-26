@@ -1,4 +1,6 @@
 #!/bin/sh
+set -eu
+
 echo tsc | sudo tee /sys/devices/system/clocksource/clocksource0/current_clocksource
 export DEBIAN_FRONTEND=noninteractive
 
@@ -17,7 +19,7 @@ sudo apt clean
 #Xorg -noreset +extension GLX +extension RANDR +extension RENDER -logfile /dev/null -config ./misc/xorg.conf :1 &
 
 # Create ifb network adapter for traffic shaping
-sudo ip link add  ifb0 type ifb
+ip link show ifb0 >/dev/null 2>&1 || sudo ip link add ifb0 type ifb
 
 # Ensure AWS meta data service is reachable (Agent adds a route that blocks this)
 sudo route delete 169.254.169.254
@@ -31,7 +33,7 @@ wpt_branch=$(curl --silent --connect-timeout 2 -H "X-aws-ec2-metadata-token: $aw
 for i in `seq 1 24`
 do
     echo "Updating from origin/$wpt_branch"
-    git fetch origin
+    git fetch --prune origin
     git reset --hard origin/$wpt_branch
     python wptagent.py -vvvv --ec2 --xvfb --throttle --exit 60 --alive /tmp/wptagent
     echo "Exited, restarting"
